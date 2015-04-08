@@ -8,6 +8,7 @@ CXX_FILES = prof.cpp
 TEST_LIB   = libprof_test.so
 
 TEST_FILES = \
+	clBuildProgram.c \
 	clCreateCommandQueue.c
 EXEC_EXT = exe
 TEST_EXECS = $(TEST_FILES:.c=.${EXEC_EXT})
