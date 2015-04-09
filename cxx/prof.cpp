@@ -37,25 +37,29 @@ clCreateCommandQueue(
 
     const char * call = "clCreateCommandQueue";
 
-    // Timestamp.
-    const boost::posix_time::ptime now = boost::posix_time::microsec_clock::universal_time();
-    std::cout << prefix << sep << call << sep << boost::posix_time::to_iso_extended_string(now) << lf;
-
     // Arguments.
     std::cout << prefix << sep << call << sep << "context"    << sep << FIXED_WIDTH_PTR(context) << lf;
     std::cout << prefix << sep << call << sep << "device"     << sep << FIXED_WIDTH_PTR(device) << lf;
     std::cout << prefix << sep << call << sep << "properties" << sep << properties << lf;
     std::cout << prefix << sep << call << sep << "errcode"    << sep << FIXED_WIDTH_PTR(errcode_ret) << lf;
 
+    // Start timestamp.
+    const boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
+    std::cout << prefix << sep << call << sep << "start" << sep << boost::posix_time::to_iso_extended_string(start) << lf;
+
     // Original call.
     clCreateCommandQueue_type clCreateCommandQueue_original = (clCreateCommandQueue_type) dlsym(RTLD_NEXT, call);
-#ifdef DVDT_PROF_TEST
-    queue = (cl_command_queue) 0x0;
-#else
+#ifndef DVDT_PROF_TEST
     queue = clCreateCommandQueue_original(context, device, properties | CL_QUEUE_PROFILING_ENABLE, errcode_ret);
+#else
+    queue = (cl_command_queue) 0x0;
 #endif
     std::cout << prefix << sep << call << sep << "queue" << sep << FIXED_WIDTH_PTR(queue) << lf;
     
+    // End timestamp.
+    const boost::posix_time::ptime end = boost::posix_time::microsec_clock::universal_time();
+    std::cout << prefix << sep << call << sep << "end" << sep << boost::posix_time::to_iso_extended_string(end) << lf;
+
     return queue;
 }
 
@@ -74,10 +78,6 @@ clBuildProgram(
 
     const char * call = "clBuildProgram";
 
-    // Timestamp.
-    const boost::posix_time::ptime now = boost::posix_time::microsec_clock::universal_time();
-    std::cout << prefix << sep << call << sep << boost::posix_time::to_iso_extended_string(now) << lf;
-    
     // Arguments.
     std::cout << prefix << sep << call << sep << "program" << sep << FIXED_WIDTH_PTR(program) << lf;
     // TODO: num_devices.
@@ -85,6 +85,10 @@ clBuildProgram(
     std::cout << prefix << sep << call << sep << "options" << sep << (options ? options : "") << lf;
     // TODO: pfn_notify.
     // TODO: user_data.
+
+    // Start timestamp.
+    const boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
+    std::cout << prefix << sep << call << sep << "start" << sep << boost::posix_time::to_iso_extended_string(start) << lf;
 
     // Original call.
     clBuildProgram_type clBuildProgram_original = (clBuildProgram_type) dlsym(RTLD_NEXT, call);
@@ -94,5 +98,46 @@ clBuildProgram(
     errcode = CL_SUCCESS;
 #endif
 
+    // End timestamp.
+    const boost::posix_time::ptime end = boost::posix_time::microsec_clock::universal_time();
+    std::cout << prefix << sep << call << sep << "end" << sep << boost::posix_time::to_iso_extended_string(end) << lf;
+
     return errcode;
+}
+
+
+// https://www.khronos.org/registry/cl/sdk/1.0/docs/man/xhtml/clCreateKernel.html
+extern CL_API_ENTRY cl_kernel CL_API_CALL
+clCreateKernel(
+    cl_program program,
+    const char * kernel_name,
+    cl_int * errcode_ret) CL_API_SUFFIX__VERSION_1_0
+{
+    cl_kernel kernel;
+
+    const char * call = "clCreateKernel";
+
+    // Arguments.
+    std::cout << prefix << sep << call << sep << "program" << sep << FIXED_WIDTH_PTR(program) << lf;
+    std::cout << prefix << sep << call << sep << "kernel_name" << sep << kernel_name << lf;
+    std::cout << prefix << sep << call << sep << "errcode" << sep << FIXED_WIDTH_PTR(errcode_ret) << lf;
+
+    // Start timestamp.
+    const boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
+    std::cout << prefix << sep << call << sep << "start" << sep << boost::posix_time::to_iso_extended_string(start) << lf;
+
+    // Original call.
+    clCreateKernel_type clCreateKernel_original = (clCreateKernel_type) dlsym(RTLD_NEXT, call);
+#ifndef DVDT_PROF_TEST
+    kernel = clCreateKernel_original(program, kernel_name, errcode_ret);
+#else
+    kernel = (cl_kernel) 0x0;
+#endif
+    std::cout << prefix << sep << call << sep << "kernel" << sep << FIXED_WIDTH_PTR(kernel) << lf;
+
+    // End timestamp.
+    const boost::posix_time::ptime end = boost::posix_time::microsec_clock::universal_time();
+    std::cout << prefix << sep << call << sep << "end" << sep << boost::posix_time::to_iso_extended_string(end) << lf;
+
+    return kernel;
 }
