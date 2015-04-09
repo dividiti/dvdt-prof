@@ -39,6 +39,7 @@ def match_clCreateCommandQueue(output, result):
         (prefix, call, 'properties', int_regex), output).group('properties')
     result['errcode']    = re.search('%s %s %s (?P<errcode>%s)' % \
         (prefix, call, 'errcode', ptr_regex), output).group('errcode')
+
     # Return value.
     result['queue']      = re.search('%s %s %s (?P<queue>%s)' % \
         (prefix, call, 'queue', ptr_regex), output).group('queue')
@@ -56,6 +57,10 @@ def match_clCreateKernel(output, result):
         (prefix, call, 'name', opts_regex), output).group('name')
     result['errcode'] = re.search('%s %s %s (?P<errcode>%s)' % \
         (prefix, call, 'errcode', ptr_regex), output).group('errcode')
+
+    # Return value.
+    result['kernel'] = re.search('%s %s %s (?P<kernel>%s)' % \
+        (prefix, call, 'kernel', ptr_regex), output).group('kernel')
 
     return result
 

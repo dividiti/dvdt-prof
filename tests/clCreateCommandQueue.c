@@ -9,7 +9,7 @@ int main()
     cl_int * errcode = (cl_int *) 0x23456789;
     
     cl_command_queue queue = clCreateCommandQueue(context, device, properties, errcode);
-    assert(((cl_command_queue)0x0 == queue));
+    assert(((cl_command_queue) 0x00000000 == queue));
 
     return 0;
 }

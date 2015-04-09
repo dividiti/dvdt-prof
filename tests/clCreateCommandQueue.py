@@ -18,6 +18,8 @@ with open(call + id_ + '.c', 'r') as f:
     source['device']     = re.search('\(cl_device_id\) (?P<device>%s)' % ptr_regex, source['text']).group('device')
     source['properties'] = re.search('\(cl_command_queue_properties\) (?P<props>\d*)', source['text']).group('props')
     source['errcode']    = re.search('\(cl_int \*\) (?P<errcode>%s)' % ptr_regex, source['text']).group('errcode')
+    # The following should match the assert statement.
+    source['queue']      = re.search('\(cl_command_queue\) (?P<queue>%s)' % ptr_regex, source['text']).group('queue')
 
 # Read from stdin (via pipe).
 output = sys.stdin.read()
