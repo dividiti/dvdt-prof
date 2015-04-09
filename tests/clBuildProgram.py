@@ -26,10 +26,11 @@ print output
 result = match(output)[0]
 print 'RESULT'
 print result
+print
 
 status = True
-status |= (source['program'] == result['program'])
-status |= (source['options'] == result['options'])
+status &= (source['program'] == result['program'])
+status &= (source['options'] == result['options'])
 
 print '%s%s: %s' % (call, id_, 'PASSED' if status else 'FAILED')
 print

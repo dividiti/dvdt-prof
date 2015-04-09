@@ -27,12 +27,13 @@ print output
 result = match(output)[0]
 print 'RESULT'
 print result
+print
 
 status = True
-status |= (source['context']    == result['context'])
-status |= (source['device']     == result['device'])
-status |= (source['properties'] == result['properties'])
-status |= (source['errcode']    == result['errcode'])
+status &= (source['context']    == result['context'])
+status &= (source['device']     == result['device'])
+status &= (source['properties'] == result['properties'])
+status &= (source['errcode']    == result['errcode'])
 
 print '%s%s: %s' % (call, id_, 'PASSED' if status else 'FAILED')
 print

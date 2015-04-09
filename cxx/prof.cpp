@@ -19,6 +19,7 @@
 #define FIXED_WIDTH_PTR(ptr) (ptr)
 #endif
 
+cl_context cached_context = NULL;
 
 static const cl_uint max_work_dim = 3;
 static const size_t default_global_work_offset = 0;
@@ -51,6 +52,11 @@ clCreateCommandQueue(
     cl_command_queue queue;
 
     const char * call = "clCreateCommandQueue";
+
+    if (NULL == cached_context)
+    {
+        cached_context = context;
+    }
 
     // Arguments.
     std::cout << prefix << sep << call << sep << "context"    << sep << FIXED_WIDTH_PTR(context) << lf;
@@ -135,7 +141,7 @@ clCreateKernel(
 
     // Arguments.
     std::cout << prefix << sep << call << sep << "program" << sep << FIXED_WIDTH_PTR(program) << lf;
-    std::cout << prefix << sep << call << sep << "kernel_name" << sep << kernel_name << lf;
+    std::cout << prefix << sep << call << sep << "name" << sep << kernel_name << lf;
     std::cout << prefix << sep << call << sep << "errcode" << sep << FIXED_WIDTH_PTR(errcode_ret) << lf;
 
     // Start timestamp.
@@ -224,6 +230,19 @@ clEnqueueNDRangeKernel(
     // - event
     std::cout << prefix << sep << call << sep << "event" << sep << FIXED_WIDTH_PTR(event) << lf;
 
+    // Support for internal profiling.
+    cl_event prof_event = 0;
+    cl_event * prof_event_p = NULL;
+    if (NULL == event)
+    {
+        cl_event prof_event = clCreateUserEvent(cached_context, NULL);
+        prof_event_p = &prof_event;
+    }
+    else
+    {
+        prof_event_p = event;
+    }
+
     // Start timestamp.
     const boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
     std::cout << prefix << sep << call << sep << "start" << sep << boost::posix_time::to_iso_extended_string(start) << lf;
@@ -232,11 +251,43 @@ clEnqueueNDRangeKernel(
     clEnqueueNDRangeKernel_type clEnqueueNDRangeKernel_original = (clEnqueueNDRangeKernel_type) dlsym(RTLD_NEXT, call);
 #ifndef DVDT_PROF_TEST
     errcode = clEnqueueNDRangeKernel_original(queue, kernel,\
-        work_dim, global_work_offset, global_work_size, local_work_size, num_events_in_wait_list, event_wait_list, event);
-    // TODO: Make the call blocking so (end - start) represents the actual program build time.
+        work_dim, global_work_offset, global_work_size, local_work_size, num_events_in_wait_list, event_wait_list, prof_event_p);
+    if (CL_SUCCESS != errcode)
+    {
+        if (NULL == event)
+        {
+            clReleaseEvent(prof_event);
+        }
+        return errcode;
+    }
+    else
+    {
+        cl_int err = CL_SUCCESS;
+
+        cl_ulong queued, submit, start, end;
+        err |= clWaitForEvents(1, prof_event_p);
+        err |= clGetEventProfilingInfo(*prof_event_p, CL_PROFILING_COMMAND_QUEUED, sizeof(cl_ulong), &queued, NULL);
+        err |= clGetEventProfilingInfo(*prof_event_p, CL_PROFILING_COMMAND_SUBMIT, sizeof(cl_ulong), &submit, NULL);
+        err |= clGetEventProfilingInfo(*prof_event_p, CL_PROFILING_COMMAND_START,  sizeof(cl_ulong), &start,  NULL);
+        err |= clGetEventProfilingInfo(*prof_event_p, CL_PROFILING_COMMAND_END,    sizeof(cl_ulong), &end,    NULL);
+        if (NULL == event)
+        {
+            err |= clReleaseEvent(prof_event);
+        }
+
+        std::cout << prefix << sep << call << sep << "profiling";
+        if (CL_SUCCESS != err)
+        {
+            std::cout << " error: " << err << lf;
+        }
+        else
+        {
+            std::cout << sep << queued << sep << submit << sep << start << sep << end << lf;
+        }
+    }
 #else
     errcode = CL_SUCCESS;
-#endif
+#endif // #ifdef DVDT_PROF_TEST
 
     // End timestamp.
     const boost::posix_time::ptime end = boost::posix_time::microsec_clock::universal_time();

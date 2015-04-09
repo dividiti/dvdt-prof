@@ -9,7 +9,7 @@ call_regex = 'cl[a-zA-Z]*?' # non-greedy
 opts_regex = '[ \-\w_=]*'
 iso_regex  = '\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}' 
 ptr_regex  = '0x[0-9a-fA-F]{1,8}'
-int_regex  = '\d*'
+int_regex  = '\d+'
 
 #
 # Parsers for API calls.
@@ -50,11 +50,11 @@ def match_clCreateKernel(output, result):
     call = 'clCreateKernel'
 
     # Arguments.
-    result['program']    = re.search('%s %s %s (?P<program>%s)' % \
+    result['program'] = re.search('%s %s %s (?P<program>%s)' % \
         (prefix, call, 'program', ptr_regex), output).group('program')
-    result['kernel_name']= re.search('%s %s %s (?P<kernel_name>%s)' % \
-        (prefix, call, 'kernel_name', opts_regex), output).group('kernel_name')
-    result['errcode']    = re.search('%s %s %s (?P<errcode>%s)' % \
+    result['name']    = re.search('%s %s %s (?P<name>%s)' % \
+        (prefix, call, 'name', opts_regex), output).group('name')
+    result['errcode'] = re.search('%s %s %s (?P<errcode>%s)' % \
         (prefix, call, 'errcode', ptr_regex), output).group('errcode')
 
     return result
@@ -78,6 +78,14 @@ def match_clEnqueueNDRangeKernel(output, result):
         (prefix, call, 'event_wait_list', '.*'), output).group('event_wait_list').split()
     result['event']  = re.search('%s %s %s (?P<event>%s)' % \
         (prefix, call, 'event', ptr_regex), output).group('event')
+    profiling_match = re.search('%s %s %s (?P<queued>%s) (?P<submit>%s) (?P<start>%s) (?P<end>%s)' % \
+        (prefix, call, 'profiling', int_regex, int_regex, int_regex, int_regex), output)
+    if profiling_match:
+        result['profiling'] = {}
+        result['profiling']['queued'] = int(profiling_match.group('queued'))
+        result['profiling']['submit'] = int(profiling_match.group('submit'))
+        result['profiling']['start']  = int(profiling_match.group('start'))
+        result['profiling']['end']    = int(profiling_match.group('end'))
 
     return result
 
