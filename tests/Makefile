@@ -10,7 +10,8 @@ TEST_LIB   = libprof_test.so
 TEST_FILES = \
 	clBuildProgram.c \
 	clCreateCommandQueue.c \
-	clCreateKernel.c
+	clCreateKernel.c \
+	clEnqueueNDRangeKernel.c
 EXEC_EXT = exe
 TEST_EXECS = $(TEST_FILES:.c=.${EXEC_EXT})
 
