@@ -4,13 +4,13 @@ import re
 # Common definitions.
 #
 
-prefix = '\[dv\/dt\]'
-call_regex = 'cl[a-zA-Z]*?' # non-greedy
-opts_regex = '[ \-\w_=]*'
-iso_regex  = '\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}'
-ptr_regex  = '0x[0-9a-fA-F]{1,8}'
-int_regex  = '\d+'
-bool_regex = '\d'
+prefix = '(\[dv\/dt\])'
+call_regex = '(cl[a-zA-Z]*?)' # non-greedy
+opts_regex = '([ \-\w_=]*)'
+iso_regex  = '(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6})'
+ptr_regex  = '((0x[0-9a-fA-F]{1,8})|(0))'
+int_regex  = '(\d+)'
+bool_regex = '(\d)'
 
 #
 # Parsers for API calls.

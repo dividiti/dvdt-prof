@@ -5,11 +5,20 @@
 #ifndef DVDT_PROF_HPP
 #define DVDT_PROF_HPP
 
+
 #ifdef __APPLE__
 #include <OpenCL/opencl.h>
 #else
 #include <CL/opencl.h>
 #endif
+
+
+#ifdef DVDT_PROF_TEST 
+#define FIXED_WIDTH_PTR(ptr) "0x" << std::hex << std::setw(8) << std::setfill('0') << (size_t)(ptr) << std::dec
+#else
+#define FIXED_WIDTH_PTR(ptr) (ptr)
+#endif
+
 
 typedef cl_command_queue (*clCreateCommandQueue_type)(cl_context, cl_device_id, cl_command_queue_properties, cl_int *errcode_ret);
 

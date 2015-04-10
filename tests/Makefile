@@ -1,11 +1,7 @@
-CXX := g++
-CXXFLAGS := -O2 -g -W -Wall
-LDFLAGS := -fPIC -shared -ldl
+TEST_LIB = libprof_test.so
 
-CXX_DIR   = ../cxx/
-CXX_FILES = prof.cpp
 
-TEST_LIB   = libprof_test.so
+EXEC_EXT = exe
 
 TEST_FILES = \
 	clBuildProgram.c \
@@ -14,8 +10,16 @@ TEST_FILES = \
 	clEnqueueNDRangeKernel.c \
 	clEnqueueReadBuffer.c
 
-EXEC_EXT = exe
 TEST_EXECS = $(TEST_FILES:.c=.${EXEC_EXT})
+
+
+CXX := g++
+CXXFLAGS := -O2 -g -W -Wall
+LDFLAGS := -fPIC -shared -ldl
+
+CXX_DIR   = ../cxx/
+CXX_FILES = prof.cpp
+
 
 all: ${TEST_LIB} ${TEST_EXECS}
 run: all $(TEST_FILES:.c=.run)
