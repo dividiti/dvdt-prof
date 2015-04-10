@@ -10,6 +10,7 @@ opts_regex = '[ \-\w_=]*'
 iso_regex  = '\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}'
 ptr_regex  = '0x[0-9a-fA-F]{1,8}'
 int_regex  = '\d+'
+bool_regex = '\d'
 
 #
 # Parsers for API calls.
@@ -95,12 +96,45 @@ def match_clEnqueueNDRangeKernel(output, result):
     return result
 
 
+def match_clEnqueueReadBuffer(output, result):
+    call = 'clEnqueueReadBuffer'
+
+    # Arguments.
+    result['queue']  = re.search('%s %s %s (?P<queue>%s)' % \
+        (prefix, call, 'queue', ptr_regex), output).group('queue')
+    result['buffer'] = re.search('%s %s %s (?P<buffer>%s)' % \
+        (prefix, call, 'buffer', ptr_regex), output).group('buffer')
+    result['blocking'] = int(re.search('%s %s %s (?P<blocking>%s)' % \
+        (prefix, call, 'blocking', bool_regex), output).group('blocking'))
+    result['offset']  = int(re.search('%s %s %s (?P<offset>%s)' % \
+        (prefix, call, 'offset', int_regex), output).group('offset'))
+    result['size']  = int(re.search('%s %s %s (?P<size>%s)' % \
+        (prefix, call, 'size', int_regex), output).group('size'))
+    result['ptr']  = re.search('%s %s %s (?P<ptr>%s)' % \
+        (prefix, call, 'ptr', ptr_regex), output).group('ptr')
+    result['event_wait_list'] = re.search('%s %s %s (?P<event_wait_list>%s)' % \
+        (prefix, call, 'event_wait_list', '.*'), output).group('event_wait_list').split()
+    result['event']  = re.search('%s %s %s (?P<event>%s)' % \
+        (prefix, call, 'event', ptr_regex), output).group('event')
+    profiling_match = re.search('%s %s %s (?P<queued>%s) (?P<submit>%s) (?P<start>%s) (?P<end>%s)' % \
+        (prefix, call, 'profiling', int_regex, int_regex, int_regex, int_regex), output)
+    if profiling_match:
+        result['profiling'] = {}
+        result['profiling']['queued'] = int(profiling_match.group('queued'))
+        result['profiling']['submit'] = int(profiling_match.group('submit'))
+        result['profiling']['start']  = int(profiling_match.group('start'))
+        result['profiling']['end']    = int(profiling_match.group('end'))
+
+    return result
+
+
 # Map from API calls to parsers.
 map_call_to_parser = {
     'clBuildProgram'         : match_clBuildProgram,
     'clCreateCommandQueue'   : match_clCreateCommandQueue,
     'clCreateKernel'         : match_clCreateKernel,
-    'clEnqueueNDRangeKernel' : match_clEnqueueNDRangeKernel
+    'clEnqueueNDRangeKernel' : match_clEnqueueNDRangeKernel,
+    'clEnqueueReadBuffer'    : match_clEnqueueReadBuffer
 }
 
 

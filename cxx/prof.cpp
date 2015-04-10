@@ -41,7 +41,7 @@ static const char lf = '\n';
 // - clEnqueueNDRangeKernel()
 //
 
-// https://www.khronos.org/registry/cl/sdk/1.0/docs/man/xhtml/clCreateCommandQueue.html
+// https://www.khronos.org/registry/cl/sdk/1.2/docs/man/xhtml/clCreateCommandQueue.html
 extern CL_API_ENTRY cl_command_queue CL_API_CALL
 clCreateCommandQueue(
     cl_context context,
@@ -85,7 +85,7 @@ clCreateCommandQueue(
 }
 
 
-// https://www.khronos.org/registry/cl/sdk/1.0/docs/man/xhtml/clBuildProgram.html
+// https://www.khronos.org/registry/cl/sdk/1.2/docs/man/xhtml/clBuildProgram.html
 extern CL_API_ENTRY cl_int CL_API_CALL
 clBuildProgram(
     cl_program program,
@@ -128,7 +128,7 @@ clBuildProgram(
 }
 
 
-// https://www.khronos.org/registry/cl/sdk/1.0/docs/man/xhtml/clCreateKernel.html
+// https://www.khronos.org/registry/cl/sdk/1.2/docs/man/xhtml/clCreateKernel.html
 extern CL_API_ENTRY cl_kernel CL_API_CALL
 clCreateKernel(
     cl_program program,
@@ -165,7 +165,7 @@ clCreateKernel(
 }
 
 
-// https://www.khronos.org/registry/cl/sdk/1.0/docs/man/xhtml/clEnqueueNDRangeKernelKernel.html
+// https://www.khronos.org/registry/cl/sdk/1.2/docs/man/xhtml/clEnqueueNDRangeKernel.html
 extern CL_API_ENTRY cl_int CL_API_CALL
 clEnqueueNDRangeKernel(
     cl_command_queue queue,
@@ -252,6 +252,106 @@ clEnqueueNDRangeKernel(
 #ifndef DVDT_PROF_TEST
     errcode = clEnqueueNDRangeKernel_original(queue, kernel,\
         work_dim, global_work_offset, global_work_size, local_work_size, num_events_in_wait_list, event_wait_list, prof_event_p);
+    if (CL_SUCCESS != errcode)
+    {
+        if (NULL == event)
+        {
+            clReleaseEvent(prof_event);
+        }
+        return errcode;
+    }
+    else
+    {
+        cl_int err = CL_SUCCESS;
+
+        cl_ulong queued, submit, start, end;
+        err |= clWaitForEvents(1, prof_event_p);
+        err |= clGetEventProfilingInfo(*prof_event_p, CL_PROFILING_COMMAND_QUEUED, sizeof(cl_ulong), &queued, NULL);
+        err |= clGetEventProfilingInfo(*prof_event_p, CL_PROFILING_COMMAND_SUBMIT, sizeof(cl_ulong), &submit, NULL);
+        err |= clGetEventProfilingInfo(*prof_event_p, CL_PROFILING_COMMAND_START,  sizeof(cl_ulong), &start,  NULL);
+        err |= clGetEventProfilingInfo(*prof_event_p, CL_PROFILING_COMMAND_END,    sizeof(cl_ulong), &end,    NULL);
+        if (NULL == event)
+        {
+            err |= clReleaseEvent(prof_event);
+        }
+
+        std::cout << prefix << sep << call << sep << "profiling";
+        if (CL_SUCCESS != err)
+        {
+            std::cout << " error: " << err << lf;
+        }
+        else
+        {
+            std::cout << sep << queued << sep << submit << sep << start << sep << end << lf;
+        }
+    }
+#else
+    errcode = CL_SUCCESS;
+#endif // #ifdef DVDT_PROF_TEST
+
+    // End timestamp.
+    const boost::posix_time::ptime end = boost::posix_time::microsec_clock::universal_time();
+    std::cout << prefix << sep << call << sep << "end" << sep << boost::posix_time::to_iso_extended_string(end) << lf << lf;
+
+    return errcode;
+}
+
+
+// https://www.khronos.org/registry/cl/sdk/1.2/docs/man/xhtml/clEnqueueReadBuffer.html
+extern CL_API_ENTRY cl_int CL_API_CALL
+clEnqueueReadBuffer(
+    cl_command_queue queue,
+    cl_mem buffer,
+    cl_bool blocking,
+    size_t offset,
+    size_t size,
+    void *ptr,
+    cl_uint num_events_in_wait_list,
+    const cl_event *event_wait_list,
+    cl_event *event) CL_API_SUFFIX__VERSION_1_0
+{
+    cl_int errcode;
+
+    const char * call = "clEnqueueReadBuffer";
+
+    // Arguments.
+    std::cout << prefix << sep << call << sep << "queue"  << sep << FIXED_WIDTH_PTR(queue) << lf;
+    std::cout << prefix << sep << call << sep << "buffer" << sep << FIXED_WIDTH_PTR(buffer) << lf;
+    std::cout << prefix << sep << call << sep << "blocking" << sep << blocking << lf;
+    std::cout << prefix << sep << call << sep << "offset" << sep << offset << lf;
+    std::cout << prefix << sep << call << sep << "size" << sep << size << lf;
+    std::cout << prefix << sep << call << sep << "ptr" << sep << FIXED_WIDTH_PTR(ptr) << lf;
+    // - event_wait_list
+    std::cout << prefix << sep << call << sep << "event_wait_list";
+    for (cl_uint e = 0; e < num_events_in_wait_list; ++e)
+    {
+        std::cout << sep << event_wait_list[e];
+    }
+    std::cout << lf;
+    // - event
+    std::cout << prefix << sep << call << sep << "event" << sep << FIXED_WIDTH_PTR(event) << lf;
+
+    // Support for internal profiling.
+    cl_event prof_event = 0;
+    cl_event * prof_event_p = NULL;
+    if (NULL == event)
+    {
+        cl_event prof_event = clCreateUserEvent(cached_context, NULL);
+        prof_event_p = &prof_event;
+    }
+    else
+    {
+        prof_event_p = event;
+    }
+
+    // Start timestamp.
+    const boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
+    std::cout << prefix << sep << call << sep << "start" << sep << boost::posix_time::to_iso_extended_string(start) << lf;
+
+    // Original call.
+    clEnqueueReadBuffer_type clEnqueueReadBuffer_original = (clEnqueueReadBuffer_type) dlsym(RTLD_NEXT, call);
+#ifndef DVDT_PROF_TEST
+    errcode = clEnqueueReadBuffer_original(queue, buffer, blocking, offset, size, ptr, num_events_in_wait_list, event_wait_list, prof_event_p);
     if (CL_SUCCESS != errcode)
     {
         if (NULL == event)
