@@ -2,10 +2,10 @@
 import sys, re
 
 sys.path.append('../python')
-from prof import match
-from prof import int_regex
-from prof import ptr_regex
-from prof import opts_regex
+from prof_parser import prof_parse
+from prof_parser import int_regex
+from prof_parser import ptr_regex
+from prof_parser import opts_regex
 
 max_work_dim = 3
 default_offset = 0
@@ -65,7 +65,7 @@ output = sys.stdin.read()
 print 'OUTPUT'
 print output
 
-result = match(output)[0]
+result = prof_parse(output)[0]
 print 'RESULT'
 print result
 print

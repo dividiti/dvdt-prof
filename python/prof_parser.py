@@ -7,7 +7,7 @@ import re
 prefix = '\[dv\/dt\]'
 call_regex = 'cl[a-zA-Z]*?' # non-greedy
 opts_regex = '[ \-\w_=]*'
-iso_regex  = '\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}' 
+iso_regex  = '\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}'
 ptr_regex  = '0x[0-9a-fA-F]{1,8}'
 int_regex  = '\d+'
 
@@ -127,7 +127,7 @@ def next_match(output):
     return (output[match.end():], result)
 
 
-def match(output):
+def prof_parse(output):
     results = []
     (output, result) = next_match(output)
     while result:
