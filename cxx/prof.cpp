@@ -367,7 +367,6 @@ clEnqueueReadBuffer(
     // - event
     std::cout << prefix << sep << call << sep << "event" << sep << FIXED_WIDTH_PTR(event) << lf;
 
-
 #ifdef DVDT_PROF_TEST
 
     errcode = CL_SUCCESS;
@@ -385,6 +384,81 @@ clEnqueueReadBuffer(
     // Original call.
     clEnqueueReadBuffer_type clEnqueueReadBuffer_original = (clEnqueueReadBuffer_type) dlsym(RTLD_NEXT, call);
     errcode = clEnqueueReadBuffer_original(queue, buffer, blocking, offset, size, ptr,
+        num_events_in_wait_list, event_wait_list, prof_event);
+    if (CL_SUCCESS != errcode)
+    {
+        return errcode;
+    }
+
+    dvdt::output_profiling_info(call, prof_event);
+
+    // End timestamp.
+    const boost::posix_time::ptime end = boost::posix_time::microsec_clock::universal_time();
+    std::cout << prefix << sep << call << sep << "end" << sep << boost::posix_time::to_iso_extended_string(end) << lf;
+
+#endif
+
+    // Return value.
+    std::cout << prefix << sep << call << sep << "errcode" << sep << errcode << lf << lf;
+
+    return errcode;
+}
+
+
+// https://www.khronos.org/registry/cl/sdk/1.2/docs/man/xhtml/clEnqueueWriteBuffer.html
+extern CL_API_ENTRY cl_int CL_API_CALL
+clEnqueueWriteBuffer(
+    cl_command_queue queue,
+    cl_mem buffer,
+    cl_bool blocking,
+    size_t offset,
+    size_t size,
+    const void *ptr,
+    cl_uint num_events_in_wait_list,
+    const cl_event *event_wait_list,
+    cl_event *event) CL_API_SUFFIX__VERSION_1_0
+{
+    // Return value.
+    cl_int errcode;
+
+    // API call.
+    const char * call = "clEnqueueWriteBuffer";
+    std::cout << prefix << sep << call << lf;
+
+    // Arguments.
+    std::cout << prefix << sep << call << sep << "queue"  << sep << FIXED_WIDTH_PTR(queue) << lf;
+    std::cout << prefix << sep << call << sep << "buffer" << sep << FIXED_WIDTH_PTR(buffer) << lf;
+    std::cout << prefix << sep << call << sep << "blocking" << sep << blocking << lf;
+    std::cout << prefix << sep << call << sep << "offset" << sep << offset << lf;
+    std::cout << prefix << sep << call << sep << "size" << sep << size << lf;
+    std::cout << prefix << sep << call << sep << "ptr" << sep << FIXED_WIDTH_PTR(ptr) << lf;
+    // - event_wait_list
+    std::cout << prefix << sep << call << sep << "event_wait_list";
+    for (cl_uint e = 0; e < num_events_in_wait_list; ++e)
+    {
+        std::cout << sep << event_wait_list[e];
+    }
+    std::cout << lf;
+    // - event
+    std::cout << prefix << sep << call << sep << "event" << sep << FIXED_WIDTH_PTR(event) << lf;
+
+#ifdef DVDT_PROF_TEST
+
+    errcode = CL_SUCCESS;
+
+#else
+
+    // Start timestamp.
+    const boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
+    std::cout << prefix << sep << call << sep << "start" << sep << boost::posix_time::to_iso_extended_string(start) << lf;
+
+    // Event object needed if 'event' is NULL.
+    cl_event prof_event_obj;
+    cl_event * prof_event = (NULL != event ? event : &prof_event_obj);
+
+    // Original call.
+    clEnqueueWriteBuffer_type clEnqueueWriteBuffer_original = (clEnqueueWriteBuffer_type) dlsym(RTLD_NEXT, call);
+    errcode = clEnqueueWriteBuffer_original(queue, buffer, blocking, offset, size, ptr,
         num_events_in_wait_list, event_wait_list, prof_event);
     if (CL_SUCCESS != errcode)
     {

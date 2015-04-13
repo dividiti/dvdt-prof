@@ -88,8 +88,8 @@ def match_clEnqueueNDRangeKernel(output, result):
         (prefix, call, 'gws', '.*'), output).group('gws').split()]
     result['lws']    = [int(i) for i in re.search('%s %s %s (?P<lws>%s)' % \
         (prefix, call, 'lws', '.*'), output).group('lws').split()]
-    result['event_wait_list'] = re.search('%s %s %s (?P<event_wait_list>%s)' % \
-        (prefix, call, 'event_wait_list', '.*'), output).group('event_wait_list').split()
+    result['event_wait_list'] = re.search('%s %s %s(?P<event_wait_list>( %s)*)' % \
+        (prefix, call, 'event_wait_list', ptr_regex), output).group('event_wait_list').split()
     result['event']  = re.search('%s %s %s (?P<event>%s)' % \
         (prefix, call, 'event', ptr_regex), output).group('event')
 
@@ -113,9 +113,8 @@ def match_clEnqueueNDRangeKernel(output, result):
     return (output[last_match.end():], result)
 
 
-def match_clEnqueueReadBuffer(output, result):
-    call = 'clEnqueueReadBuffer'
-
+# Auxiliary function for clEnqueueReadBuffer and clEnqueueWriteBuffer.
+def _match_clEnqueueReadOrWriteBuffer(call, output, result):
     # Arguments.
     result['queue']  = re.search('%s %s %s (?P<queue>%s)' % \
         (prefix, call, 'queue', ptr_regex), output).group('queue')
@@ -129,8 +128,8 @@ def match_clEnqueueReadBuffer(output, result):
         (prefix, call, 'size', int_regex), output).group('size'))
     result['ptr']  = re.search('%s %s %s (?P<ptr>%s)' % \
         (prefix, call, 'ptr', ptr_regex), output).group('ptr')
-    result['event_wait_list'] = re.search('%s %s %s (?P<event_wait_list>%s)' % \
-        (prefix, call, 'event_wait_list', '.*'), output).group('event_wait_list').split()
+    result['event_wait_list'] = re.search('%s %s %s(?P<event_wait_list>( %s)*)' % \
+        (prefix, call, 'event_wait_list', ptr_regex), output).group('event_wait_list').split()
     result['event']  = re.search('%s %s %s (?P<event>%s)' % \
         (prefix, call, 'event', ptr_regex), output).group('event')
 
@@ -153,6 +152,13 @@ def match_clEnqueueReadBuffer(output, result):
 
     return (output[last_match.end():], result)
 
+def match_clEnqueueReadBuffer(output, result):
+    call = 'clEnqueueReadBuffer'
+    return _match_clEnqueueReadOrWriteBuffer(call, output, result)
+
+def match_clEnqueueWriteBuffer(output, result):
+    call = 'clEnqueueWriteBuffer'
+    return _match_clEnqueueReadOrWriteBuffer(call, output, result)
 
 # Map from API calls to parsers.
 map_call_to_parser = {
@@ -160,7 +166,8 @@ map_call_to_parser = {
     'clCreateCommandQueue'   : match_clCreateCommandQueue,
     'clCreateKernel'         : match_clCreateKernel,
     'clEnqueueNDRangeKernel' : match_clEnqueueNDRangeKernel,
-    'clEnqueueReadBuffer'    : match_clEnqueueReadBuffer
+    'clEnqueueReadBuffer'    : match_clEnqueueReadBuffer,
+    'clEnqueueWriteBuffer'   : match_clEnqueueWriteBuffer
 }
 
 

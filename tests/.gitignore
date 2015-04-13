@@ -1,2 +1,3 @@
 libprof_test.so
 *.exe
+*.pyc

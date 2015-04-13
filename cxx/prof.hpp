@@ -34,5 +34,6 @@ typedef cl_int (*clEnqueueNDRangeKernel_type)(cl_command_queue, cl_kernel, cl_ui
 
 typedef cl_int (*clEnqueueReadBuffer_type)(cl_command_queue, cl_mem, cl_bool, size_t, size_t, void *, cl_uint, const cl_event *, cl_event *);
 
+typedef cl_int (*clEnqueueWriteBuffer_type)(cl_command_queue, cl_mem, cl_bool, size_t, size_t, const void *, cl_uint, const cl_event *, cl_event *);
 
 #endif // #ifndef DVDT_PROF_HPP

@@ -5,7 +5,7 @@ sys.path.append('.')
 from clEnqueueReadOrWriteBuffer import run
 
 # Test info.
-call = 'clEnqueueReadBuffer'
+call = 'clEnqueueWriteBuffer'
 id_  = ''
 
 # Run test.
