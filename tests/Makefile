@@ -8,7 +8,8 @@ TEST_FILES = \
 	clCreateCommandQueue.c \
 	clCreateKernel.c \
 	clEnqueueNDRangeKernel.c \
-	clEnqueueReadBuffer.c
+	clEnqueueReadBuffer.c \
+	clEnqueueWriteBuffer.c
 
 TEST_EXECS = $(TEST_FILES:.c=.${EXEC_EXT})
 
@@ -38,3 +39,4 @@ ${TEST_LIB}: $(addprefix ${CXX_DIR}, ${CXX_FILES})
 clean:
 	rm -f ${TEST_LIB}
 	rm -f ${TEST_EXECS}
+	rm -f *.pyc
