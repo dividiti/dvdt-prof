@@ -38,32 +38,8 @@ namespace dvdt {
 //
 // Internal profiling support.
 //
-cl_event *
-create_profiling_event(const char * call, cl_event * event)
-{
-    cl_event * prof_event = NULL;
-
-    if (NULL == event)
-    {
-        cl_int prof_errcode = CL_SUCCESS;
-        cl_event created_event = clCreateUserEvent(cached_context, &prof_errcode);
-        if (CL_SUCCESS != prof_errcode)
-        {
-            std::cout << prefix << sep << call << sep << "profiling event error: " << prof_errcode << lf;
-        }
-        prof_event = &created_event;
-    }
-    else
-    {
-        prof_event = event;
-    }
-
-    return prof_event;
-}
-
-
 void
-output_profiling_info(const char * call, const cl_event * prof_event)
+output_profiling_info(const char * call, cl_event * prof_event)
 {
     cl_ulong queued, submit, start, end;
 
@@ -73,23 +49,13 @@ output_profiling_info(const char * call, const cl_event * prof_event)
     prof_errcode |= clGetEventProfilingInfo(*prof_event, CL_PROFILING_COMMAND_SUBMIT, sizeof(cl_ulong), &submit, NULL);
     prof_errcode |= clGetEventProfilingInfo(*prof_event, CL_PROFILING_COMMAND_START,  sizeof(cl_ulong), &start,  NULL);
     prof_errcode |= clGetEventProfilingInfo(*prof_event, CL_PROFILING_COMMAND_END,    sizeof(cl_ulong), &end,    NULL);
+    if (CL_SUCCESS != prof_errcode)
+    {
+        std::cout << prefix << sep << call << sep << "output profiling info error: " << prof_errcode << lf;
+    }
 
     std::cout << prefix << sep << call << sep << "profiling" <<
         sep << queued << sep << submit << sep << start << sep << end << lf;
-}
-
-
-void
-release_profiling_event(const char * call, const cl_event * event, cl_event * prof_event)
-{
-    if (NULL == event)
-    {
-        cl_int prof_errcode = clReleaseEvent(*prof_event);
-        if (CL_SUCCESS != prof_errcode)
-        {
-            std::cout << prefix << sep << call << sep << "profiling event error: " << prof_errcode << lf;
-        }
-    }
 }
 
 
@@ -119,6 +85,7 @@ clCreateCommandQueue(
 
     // API call.
     const char * call = "clCreateCommandQueue";
+    std::cout << prefix << sep << call << lf;
 
     if (NULL == cached_context)
     {
@@ -173,6 +140,7 @@ clBuildProgram(
 
     // API call.
     const char * call = "clBuildProgram";
+    std::cout << prefix << sep << call << lf;
 
     // Arguments.
     std::cout << prefix << sep << call << sep << "program" << sep << FIXED_WIDTH_PTR(program) << lf;
@@ -222,6 +190,7 @@ clCreateKernel(
 
     // API call.
     const char * call = "clCreateKernel";
+    std::cout << prefix << sep << call << lf;
 
     // Arguments.
     std::cout << prefix << sep << call << sep << "program" << sep << FIXED_WIDTH_PTR(program) << lf;
@@ -273,6 +242,7 @@ clEnqueueNDRangeKernel(
 
     // API call.
     const char * call = "clEnqueueNDRangeKernel";
+    std::cout << prefix << sep << call << lf;
 
     // Arguments.
     std::cout << prefix << sep << call << sep << "queue"  << sep << FIXED_WIDTH_PTR(queue) << lf;
@@ -332,23 +302,20 @@ clEnqueueNDRangeKernel(
     const boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
     std::cout << prefix << sep << call << sep << "start" << sep << boost::posix_time::to_iso_extended_string(start) << lf;
 
-    // Create profiling event.
-    cl_event * prof_event = dvdt::create_profiling_event(call, event);
-    assert(prof_event);
+    // Event object needed if 'event' is NULL.
+    cl_event prof_event_obj;
+    cl_event * prof_event = (NULL != event ? event : &prof_event_obj);
 
     // Original call.
     clEnqueueNDRangeKernel_type clEnqueueNDRangeKernel_original = (clEnqueueNDRangeKernel_type) dlsym(RTLD_NEXT, call);
-    errcode = clEnqueueNDRangeKernel_original(queue, kernel,\
-        work_dim, global_work_offset, global_work_size, local_work_size, num_events_in_wait_list, event_wait_list, prof_event);
-
+    errcode = clEnqueueNDRangeKernel_original(queue, kernel, work_dim, global_work_offset, global_work_size, local_work_size,
+        num_events_in_wait_list, event_wait_list, prof_event);
     if (CL_SUCCESS != errcode)
     {
-        dvdt::release_profiling_event(call, event, prof_event);
         return errcode;
     }
 
     dvdt::output_profiling_info(call, prof_event);
-    dvdt::release_profiling_event(call, event, prof_event);
 
     // End timestamp.
     const boost::posix_time::ptime end = boost::posix_time::microsec_clock::universal_time();
@@ -381,6 +348,7 @@ clEnqueueReadBuffer(
 
     // API call.
     const char * call = "clEnqueueReadBuffer";
+    std::cout << prefix << sep << call << lf;
 
     // Arguments.
     std::cout << prefix << sep << call << sep << "queue"  << sep << FIXED_WIDTH_PTR(queue) << lf;
@@ -410,22 +378,20 @@ clEnqueueReadBuffer(
     const boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
     std::cout << prefix << sep << call << sep << "start" << sep << boost::posix_time::to_iso_extended_string(start) << lf;
 
-    // Create profiling event.
-    cl_event * prof_event = dvdt::create_profiling_event(call, event);
-    assert(prof_event);
+    // Event object needed if 'event' is NULL.
+    cl_event prof_event_obj;
+    cl_event * prof_event = (NULL != event ? event : &prof_event_obj);
 
     // Original call.
     clEnqueueReadBuffer_type clEnqueueReadBuffer_original = (clEnqueueReadBuffer_type) dlsym(RTLD_NEXT, call);
-    errcode = clEnqueueReadBuffer_original(queue, buffer, blocking, offset, size, ptr, num_events_in_wait_list, event_wait_list, prof_event);
-
+    errcode = clEnqueueReadBuffer_original(queue, buffer, blocking, offset, size, ptr,
+        num_events_in_wait_list, event_wait_list, prof_event);
     if (CL_SUCCESS != errcode)
     {
-        dvdt::release_profiling_event(call, event, prof_event);
         return errcode;
     }
 
     dvdt::output_profiling_info(call, prof_event);
-    dvdt::release_profiling_event(call, event, prof_event);
 
     // End timestamp.
     const boost::posix_time::ptime end = boost::posix_time::microsec_clock::universal_time();

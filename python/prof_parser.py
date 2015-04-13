@@ -167,7 +167,8 @@ map_call_to_parser = {
 def next_match(output):
     result = {}
 
-    match = re.search('%s (?P<call>%s)' % (prefix, call_regex), output)
+    # For robustness, a new block starts with just an API call name.
+    match = re.search('%s (?P<call>%s)\n' % (prefix, call_regex), output)
     if not match:
         return ('', {})
 
