@@ -29,6 +29,7 @@ def get_source(call, id_):
     source['size'] = int(re.search('size(\s*)=(\s*)(?P<size>\d+)', text).group('size'))
     source['ptr'] = re.search('\(%s(\s*)void(\s*)\*\)(\s*)(?P<ptr>%s)' % \
         ('const' if call == 'clEnqueueWriteBuffer' else '', ptr_regex), text).group('ptr')
+
     num_events = int(re.search('num_events_in_wait_list(\s*)=(\s*)(?P<num_events>\d+)', text).group('num_events'))
     cl_event_ptr_list = match_init_list(text, 'event_wait_list\[%d\]' % num_events, '\(cl_event\) %s' % ptr_regex)
     source['event_wait_list'] = [re.match('\(cl_event\) (?P<ptr>%s)' % ptr_regex, cl_event_ptr).group('ptr') for cl_event_ptr in cl_event_ptr_list]
