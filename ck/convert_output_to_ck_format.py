@@ -48,7 +48,9 @@ for q in xx:
         if q3>0:
            kk=q1[q2+1:q3]
            v=q1[q3+1:]
-           d[k][kk]=v
+
+           if kk not in d[k]: d[k][kk]=[]
+           d[k][kk].append(v)
 
 # Write CK json
 f=open(fo,'wt')
