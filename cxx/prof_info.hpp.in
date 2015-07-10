@@ -1,0 +1,6 @@
+// Copyright (c) 2015 dividiti Limited
+
+// The configured options and settings for Prof.
+#define Prof_VERSION_MAJOR @Prof_VERSION_MAJOR@
+#define Prof_VERSION_MINOR @Prof_VERSION_MINOR@
+#define Prof_COPYRIGHT_DIVIDITI @Prof_COPYRIGHT_DIVIDITI@

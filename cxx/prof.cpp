@@ -2,16 +2,8 @@
 // 2015 (c) dividiti
 //
 
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
 
 #include "prof.hpp"
-
-#include <iostream>
-#include <boost/date_time.hpp>
-
-#include <dlfcn.h>
 
 
 static const char * prefix = "[dv/dt]";
@@ -34,6 +26,21 @@ static cl_context cached_context = NULL;
 
 
 namespace dvdt {
+
+// Wall-clock timestamps.
+static void print_timestamp(const char * call_cstr, const char * kind_cstr)
+{
+#if   (1 == DVDT_PROF_WALLCLOCK_BOOST)
+    const boost::posix_time::ptime time = boost::posix_time::microsec_clock::universal_time();
+    const std::string time_str = boost::posix_time::to_iso_extended_string(time);
+#elif (1 == DVDT_PROF_WALLCLOCK_TIMEOFDAY)
+    const std::string time_str("1970-01-01 00:00:00.000");
+#endif
+    std::cout << prefix << sep << call_cstr << sep << kind_cstr << sep << time_str << lf;
+}
+
+static void start_timestamp(const char * call) { print_timestamp(call, "start"); }
+static void end_timestamp(const char * call)   { print_timestamp(call, "end"); }
 
 //
 // Internal profiling support.
@@ -117,18 +124,12 @@ clCreateCommandQueue(
     queue = (cl_command_queue) 0x0;
 
 #else
-
-    // Start timestamp.
-    const boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
-    std::cout << prefix << sep << call << sep << "start" << sep << boost::posix_time::to_iso_extended_string(start) << lf;
+    dvdt::start_timestamp(call);
 
     // Original call.
     queue = clCreateCommandQueue_original(context, device, properties | CL_QUEUE_PROFILING_ENABLE, errcode_ret);
     
-    // End timestamp.
-    const boost::posix_time::ptime end = boost::posix_time::microsec_clock::universal_time();
-    std::cout << prefix << sep << call << sep << "end" << sep << boost::posix_time::to_iso_extended_string(end) << lf;
-
+    dvdt::end_timestamp(call);
 #endif
 
     // Return value.
@@ -173,19 +174,13 @@ clBuildProgram(
     errcode = CL_SUCCESS;
 
 #else
-
-    // Start timestamp.
-    const boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
-    std::cout << prefix << sep << call << sep << "start" << sep << boost::posix_time::to_iso_extended_string(start) << lf;
+    dvdt::start_timestamp(call);
 
     // Original call.
     errcode = clBuildProgram_original(program, num_devices, device_list, options, pfn_notify, user_data);
     // TODO: Make the call blocking so (end - start) represents the actual program build time.
 
-    // End timestamp.
-    const boost::posix_time::ptime end = boost::posix_time::microsec_clock::universal_time();
-    std::cout << prefix << sep << call << sep << "end" << sep << boost::posix_time::to_iso_extended_string(end) << lf;
-
+    dvdt::end_timestamp(call);
 #endif
 
     // Return value.
@@ -224,18 +219,12 @@ clCreateKernel(
     kernel = (cl_kernel) 0x0;
 
 #else
-
-    // Start timestamp.
-    const boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
-    std::cout << prefix << sep << call << sep << "start" << sep << boost::posix_time::to_iso_extended_string(start) << lf;
+    dvdt::start_timestamp(call);
 
     // Original call.
     kernel = clCreateKernel_original(program, kernel_name, errcode_ret);
 
-    // End timestamp.
-    const boost::posix_time::ptime end = boost::posix_time::microsec_clock::universal_time();
-    std::cout << prefix << sep << call << sep << "end" << sep << boost::posix_time::to_iso_extended_string(end) << lf;
-
+    dvdt::end_timestamp(call);
 #endif
 
     // Return value.
@@ -323,10 +312,7 @@ clEnqueueNDRangeKernel(
     errcode = CL_SUCCESS;
 
 #else
-
-    // Start timestamp.
-    const boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
-    std::cout << prefix << sep << call << sep << "start" << sep << boost::posix_time::to_iso_extended_string(start) << lf;
+    dvdt::start_timestamp(call);
 
     // Event object needed if 'event' is NULL.
     cl_event prof_event_obj;
@@ -342,10 +328,7 @@ clEnqueueNDRangeKernel(
 
     dvdt::output_profiling_info(call, prof_event);
 
-    // End timestamp.
-    const boost::posix_time::ptime end = boost::posix_time::microsec_clock::universal_time();
-    std::cout << prefix << sep << call << sep << "end" << sep << boost::posix_time::to_iso_extended_string(end) << lf;
-
+    dvdt::end_timestamp(call);
 #endif
 
     // Return value.
@@ -402,10 +385,7 @@ clEnqueueReadBuffer(
     errcode = CL_SUCCESS;
 
 #else
-
-    // Start timestamp.
-    const boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
-    std::cout << prefix << sep << call << sep << "start" << sep << boost::posix_time::to_iso_extended_string(start) << lf;
+    dvdt::start_timestamp(call);
 
     // Event object needed if 'event' is NULL.
     cl_event prof_event_obj;
@@ -421,10 +401,7 @@ clEnqueueReadBuffer(
 
     dvdt::output_profiling_info(call, prof_event);
 
-    // End timestamp.
-    const boost::posix_time::ptime end = boost::posix_time::microsec_clock::universal_time();
-    std::cout << prefix << sep << call << sep << "end" << sep << boost::posix_time::to_iso_extended_string(end) << lf;
-
+    dvdt::end_timestamp(call);
 #endif
 
     // Return value.
@@ -481,10 +458,7 @@ clEnqueueWriteBuffer(
     errcode = CL_SUCCESS;
 
 #else
-
-    // Start timestamp.
-    const boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
-    std::cout << prefix << sep << call << sep << "start" << sep << boost::posix_time::to_iso_extended_string(start) << lf;
+    dvdt::start_timestamp(call);
 
     // Event object needed if 'event' is NULL.
     cl_event prof_event_obj;
@@ -500,10 +474,7 @@ clEnqueueWriteBuffer(
 
     dvdt::output_profiling_info(call, prof_event);
 
-    // End timestamp.
-    const boost::posix_time::ptime end = boost::posix_time::microsec_clock::universal_time();
-    std::cout << prefix << sep << call << sep << "end" << sep << boost::posix_time::to_iso_extended_string(end) << lf;
-
+    dvdt::end_timestamp(call);
 #endif
 
     // Return value.

@@ -2,7 +2,7 @@ LIB = prof.so
 all: ${LIB}
 
 CXX := g++
-CXXFLAGS := -O2 -g -W -Wall
+CXXFLAGS := -O2 -g -W -Wall -DDVDT_PROF_WALLCLOCK_TIMEOFDAY=1
 LDFLAGS := -fPIC -shared -ldl
 
 CXX_DIR   = ./cxx/

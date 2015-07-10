@@ -27,7 +27,7 @@ run: all $(TEST_FILES:.c=.run)
 
 ${TEST_LIB}: $(addprefix ${CXX_DIR}, ${CXX_FILES})
 	@echo "Building $@..."
-	${CXX} $< -o $@ -DDVDT_PROF_TEST ${CXXFLAGS} ${LDFLAGS}
+	${CXX} $< -o $@ -DDVDT_PROF_TEST -DDVDT_PROF_WALLCLOCK_TIMEOFDAY ${CXXFLAGS} ${LDFLAGS}
 
 %.${EXEC_EXT}: %.c
 	@echo "Building $@..."

@@ -5,6 +5,10 @@
 #ifndef DVDT_PROF_HPP
 #define DVDT_PROF_HPP
 
+#include <dlfcn.h>
+
+#include <iostream>
+#include <iomanip>
 
 #ifdef __APPLE__
 #include <OpenCL/opencl.h>
@@ -12,8 +16,21 @@
 #include <CL/opencl.h>
 #endif
 
+// FIXME: still needed?
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
 
-#ifdef DVDT_PROF_TEST 
+#if   (1 == DVDT_PROF_WALLCLOCK_BOOST)
+#include <boost/date_time.hpp>
+#elif (1 == DVDT_PROF_WALLCLOCK_TIMEOFDAY)
+#include <sys/time.h>
+#else
+#error "Don't know how to measure wall-clock time"
+#endif
+
+
+#if (1 == DVDT_PROF_TEST)
 #define FIXED_WIDTH_PTR(ptr) "0x" << std::hex << std::setw(8) << std::setfill('0') << (size_t)(ptr) << std::dec
 #else
 #define FIXED_WIDTH_PTR(ptr) (ptr)
