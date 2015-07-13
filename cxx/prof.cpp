@@ -5,25 +5,8 @@
 
 #include "prof.hpp"
 
-
-static const char * prefix = "[dv/dt]";
-static const char sep = ' ';
-static const char lf = '\n';
-
-
-static const cl_uint max_work_dim = 3;
-
-static const size_t default_global_work_offset = 0;
-static const size_t null_global_work_offset = 0;
-
-static const size_t default_global_work_size = 1;
-
-static const size_t default_local_work_size = 1;
-static const size_t null_local_work_size = 0;
-
-
-static cl_context cached_context = NULL;
-
+// Static container for profiler methods and data.
+static dvdt::Prof prof("[dv/dt]");
 
 namespace dvdt {
 
@@ -36,7 +19,7 @@ static void print_timestamp(const char * call_cstr, const char * kind_cstr)
 #elif (1 == DVDT_PROF_WALLCLOCK_TIMEOFDAY)
     const std::string time_str("1970-01-01 00:00:00.000");
 #endif
-    std::cout << prefix << sep << call_cstr << sep << kind_cstr << sep << time_str << lf;
+    std::cout << prof.prefix << prof.sep << call_cstr << prof.sep << kind_cstr << prof.sep << time_str << prof.lf;
 }
 
 static void start_timestamp(const char * call) { print_timestamp(call, "start"); }
@@ -58,11 +41,11 @@ output_profiling_info(const char * call, cl_event * prof_event)
     prof_errcode |= clGetEventProfilingInfo(*prof_event, CL_PROFILING_COMMAND_END,    sizeof(cl_ulong), &end,    NULL);
     if (CL_SUCCESS != prof_errcode)
     {
-        std::cout << prefix << sep << call << sep << "output profiling info error: " << prof_errcode << lf;
+        std::cout << prof.prefix << prof.sep << call << prof.sep << "output profiling info error: " << prof_errcode << prof.lf;
     }
 
-    std::cout << prefix << sep << call << sep << "profiling" <<
-        sep << queued << sep << submit << sep << start << sep << end << lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "profiling" <<
+        prof.sep << queued << prof.sep << submit << prof.sep << start << prof.sep << end << prof.lf;
 }
 
 
@@ -80,12 +63,6 @@ output_profiling_info(const char * call, cl_event * prof_event)
 // - clEnqueueReadBuffer()
 // - clEnqueueWriteBuffer()
 //
-static clCreateCommandQueue_type clCreateCommandQueue_original = NULL;
-static clBuildProgram_type clBuildProgram_original = NULL;
-static clCreateKernel_type clCreateKernel_original = NULL;
-static clEnqueueNDRangeKernel_type clEnqueueNDRangeKernel_original = NULL;
-static clEnqueueReadBuffer_type clEnqueueReadBuffer_original = NULL;
-static clEnqueueWriteBuffer_type clEnqueueWriteBuffer_original = NULL;
 
 
 // https://www.khronos.org/registry/cl/sdk/1.2/docs/man/xhtml/clCreateCommandQueue.html
@@ -101,23 +78,23 @@ clCreateCommandQueue(
 
     // API call.
     const char * call = "clCreateCommandQueue";
-    std::cout << prefix << sep << call << lf;
+    std::cout << prof.prefix << prof.sep << call << prof.lf;
 
-    if (NULL == clCreateCommandQueue_original)
+    if (NULL == prof.interceptor.clCreateCommandQueue_original)
     {
-        clCreateCommandQueue_original = (clCreateCommandQueue_type) dlsym(RTLD_NEXT, call);
+        prof.interceptor.clCreateCommandQueue_original = (dvdt::Prof::Interceptor::clCreateCommandQueue_type) dlsym(RTLD_NEXT, call);
     }
 
-    if (NULL == cached_context)
+    if (NULL == prof.interceptor.context)
     {
-        cached_context = context;
+        prof.interceptor.context = context;
     }
 
     // Arguments.
-    std::cout << prefix << sep << call << sep << "context"     << sep << FIXED_WIDTH_PTR(context) << lf;
-    std::cout << prefix << sep << call << sep << "device"      << sep << FIXED_WIDTH_PTR(device) << lf;
-    std::cout << prefix << sep << call << sep << "properties"  << sep << properties << lf;
-    std::cout << prefix << sep << call << sep << "errcode_ret" << sep << FIXED_WIDTH_PTR(errcode_ret) << lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "context"     << prof.sep << FIXED_WIDTH_PTR(context) << prof.lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "device"      << prof.sep << FIXED_WIDTH_PTR(device) << prof.lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "properties"  << prof.sep << properties << prof.lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "errcode_ret" << prof.sep << FIXED_WIDTH_PTR(errcode_ret) << prof.lf;
 
 #ifdef DVDT_PROF_TEST
 
@@ -127,13 +104,14 @@ clCreateCommandQueue(
     dvdt::start_timestamp(call);
 
     // Original call.
-    queue = clCreateCommandQueue_original(context, device, properties | CL_QUEUE_PROFILING_ENABLE, errcode_ret);
+    queue = prof.interceptor.clCreateCommandQueue_original(\
+        context, device, properties | CL_QUEUE_PROFILING_ENABLE, errcode_ret);
     
     dvdt::end_timestamp(call);
 #endif
 
     // Return value.
-    std::cout << prefix << sep << call << sep << "queue" << sep << FIXED_WIDTH_PTR(queue) << lf << lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "queue" << prof.sep << FIXED_WIDTH_PTR(queue) << prof.lf << prof.lf;
 
     return queue;
 }
@@ -154,18 +132,18 @@ clBuildProgram(
 
     // API call.
     const char * call = "clBuildProgram";
-    std::cout << prefix << sep << call << lf;
+    std::cout << prof.prefix << prof.sep << call << prof.lf;
 
-    if (NULL == clBuildProgram_original)
+    if (NULL == prof.interceptor.clBuildProgram_original)
     {
-        clBuildProgram_original = (clBuildProgram_type) dlsym(RTLD_NEXT, call);
+        prof.interceptor.clBuildProgram_original = (dvdt::Prof::Interceptor::clBuildProgram_type) dlsym(RTLD_NEXT, call);
     }
 
     // Arguments.
-    std::cout << prefix << sep << call << sep << "program" << sep << FIXED_WIDTH_PTR(program) << lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "program" << prof.sep << FIXED_WIDTH_PTR(program) << prof.lf;
     // TODO: num_devices.
     // TODO: device_list.
-    std::cout << prefix << sep << call << sep << "options" << sep << (options ? options : "") << lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "options" << prof.sep << (options ? options : "") << prof.lf;
     // TODO: pfn_notify.
     // TODO: user_data.
 
@@ -177,14 +155,15 @@ clBuildProgram(
     dvdt::start_timestamp(call);
 
     // Original call.
-    errcode = clBuildProgram_original(program, num_devices, device_list, options, pfn_notify, user_data);
+    errcode = prof.interceptor.clBuildProgram_original(\
+        program, num_devices, device_list, options, pfn_notify, user_data);
     // TODO: Make the call blocking so (end - start) represents the actual program build time.
 
     dvdt::end_timestamp(call);
 #endif
 
     // Return value.
-    std::cout << prefix << sep << call << sep << "errcode" << sep << errcode << lf << lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "errcode" << prof.sep << errcode << prof.lf << prof.lf;
 
     return errcode;
 }
@@ -202,17 +181,17 @@ clCreateKernel(
 
     // API call.
     const char * call = "clCreateKernel";
-    std::cout << prefix << sep << call << lf;
+    std::cout << prof.prefix << prof.sep << call << prof.lf;
 
-    if (NULL == clCreateKernel_original)
+    if (NULL == prof.interceptor.clCreateKernel_original)
     {
-        clCreateKernel_original = (clCreateKernel_type) dlsym(RTLD_NEXT, call);
+        prof.interceptor.clCreateKernel_original = (dvdt::Prof::Interceptor::clCreateKernel_type) dlsym(RTLD_NEXT, call);
     }
 
     // Arguments.
-    std::cout << prefix << sep << call << sep << "program" << sep << FIXED_WIDTH_PTR(program) << lf;
-    std::cout << prefix << sep << call << sep << "name" << sep << kernel_name << lf;
-    std::cout << prefix << sep << call << sep << "errcode_ret" << sep << FIXED_WIDTH_PTR(errcode_ret) << lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "program" << prof.sep << FIXED_WIDTH_PTR(program) << prof.lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "name" << prof.sep << kernel_name << prof.lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "errcode_ret" << prof.sep << FIXED_WIDTH_PTR(errcode_ret) << prof.lf;
 
 #ifdef DVDT_PROF_TEST
 
@@ -222,13 +201,14 @@ clCreateKernel(
     dvdt::start_timestamp(call);
 
     // Original call.
-    kernel = clCreateKernel_original(program, kernel_name, errcode_ret);
+    kernel = prof.interceptor.clCreateKernel_original(
+        program, kernel_name, errcode_ret);
 
     dvdt::end_timestamp(call);
 #endif
 
     // Return value.
-    std::cout << prefix << sep << call << sep << "kernel" << sep << FIXED_WIDTH_PTR(kernel) << lf << lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "kernel" << prof.sep << FIXED_WIDTH_PTR(kernel) << prof.lf << prof.lf;
 
     return kernel;
 }
@@ -252,60 +232,60 @@ clEnqueueNDRangeKernel(
 
     // API call.
     const char * call = "clEnqueueNDRangeKernel";
-    std::cout << prefix << sep << call << lf;
+    std::cout << prof.prefix << prof.sep << call << prof.lf;
 
-    if (NULL == clEnqueueNDRangeKernel_original)
+    if (NULL == prof.interceptor.clEnqueueNDRangeKernel_original)
     {
-        clEnqueueNDRangeKernel_original = (clEnqueueNDRangeKernel_type) dlsym(RTLD_NEXT, call);
+        prof.interceptor.clEnqueueNDRangeKernel_original = (dvdt::Prof::Interceptor::clEnqueueNDRangeKernel_type) dlsym(RTLD_NEXT, call);
     }
 
     // Arguments.
-    std::cout << prefix << sep << call << sep << "queue"  << sep << FIXED_WIDTH_PTR(queue) << lf;
-    std::cout << prefix << sep << call << sep << "kernel" << sep << FIXED_WIDTH_PTR(kernel) << lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "queue"  << prof.sep << FIXED_WIDTH_PTR(queue) << prof.lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "kernel" << prof.sep << FIXED_WIDTH_PTR(kernel) << prof.lf;
     // - global_work_offset
-    std::cout << prefix << sep << call << sep << "offset";
-    for (cl_uint d = 0; d < max_work_dim; ++d)
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "offset";
+    for (cl_uint d = 0; d < dvdt::Prof::max_work_dim; ++d)
     {
         if (global_work_offset)
         {
-            std::cout << sep << (d < work_dim ? global_work_offset[d] : default_global_work_offset);
+            std::cout << prof.sep << (d < work_dim ? global_work_offset[d] : dvdt::Prof::default_global_work_offset);
         }
         else
         {
-            std::cout << sep << null_global_work_offset;
+            std::cout << prof.sep << dvdt::Prof::null_global_work_offset;
         }
     }
-    std::cout << lf;
+    std::cout << prof.lf;
     // - global_work_size
-    std::cout << prefix << sep << call << sep << "gws";
-    for (cl_uint d = 0; d < max_work_dim; ++d)
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "gws";
+    for (cl_uint d = 0; d < dvdt::Prof::max_work_dim; ++d)
     {
-        std::cout << sep << (d < work_dim ? global_work_size[d] : default_global_work_size);
+        std::cout << prof.sep << (d < work_dim ? global_work_size[d] : dvdt::Prof::default_global_work_size);
     }
-    std::cout << lf;
+    std::cout << prof.lf;
     // - local_work_size
-    std::cout << prefix << sep << call << sep << "lws";
-    for (cl_uint d = 0; d < max_work_dim; ++d)
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "lws";
+    for (cl_uint d = 0; d < dvdt::Prof::max_work_dim; ++d)
     {
         if (local_work_size)
         {
-            std::cout << sep << (d < work_dim ? local_work_size[d] : default_local_work_size);
+            std::cout << prof.sep << (d < work_dim ? local_work_size[d] : dvdt::Prof::default_local_work_size);
         }
         else
         {
-            std::cout << sep << null_local_work_size;
+            std::cout << prof.sep << dvdt::Prof::null_local_work_size;
         }
     }
-    std::cout << lf;
+    std::cout << prof.lf;
     // - event_wait_list
-    std::cout << prefix << sep << call << sep << "event_wait_list";
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "event_wait_list";
     for (cl_uint e = 0; e < num_events_in_wait_list; ++e)
     {
-        std::cout << sep << event_wait_list[e];
+        std::cout << prof.sep << event_wait_list[e];
     }
-    std::cout << lf;
+    std::cout << prof.lf;
     // - event
-    std::cout << prefix << sep << call << sep << "event" << sep << FIXED_WIDTH_PTR(event) << lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "event" << prof.sep << FIXED_WIDTH_PTR(event) << prof.lf;
 
 #ifdef DVDT_PROF_TEST
 
@@ -319,7 +299,8 @@ clEnqueueNDRangeKernel(
     cl_event * prof_event = (NULL != event ? event : &prof_event_obj);
 
     // Original call.
-    errcode = clEnqueueNDRangeKernel_original(queue, kernel, work_dim, global_work_offset, global_work_size, local_work_size,
+    errcode = prof.interceptor.clEnqueueNDRangeKernel_original(\
+        queue, kernel, work_dim, global_work_offset, global_work_size, local_work_size,\
         num_events_in_wait_list, event_wait_list, prof_event);
     if (CL_SUCCESS != errcode)
     {
@@ -332,7 +313,7 @@ clEnqueueNDRangeKernel(
 #endif
 
     // Return value.
-    std::cout << prefix << sep << call << sep << "errcode" << sep << errcode << lf << lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "errcode" << prof.sep << errcode << prof.lf << prof.lf;
 
     return errcode;
 }
@@ -356,29 +337,29 @@ clEnqueueReadBuffer(
 
     // API call.
     const char * call = "clEnqueueReadBuffer";
-    std::cout << prefix << sep << call << lf;
+    std::cout << prof.prefix << prof.sep << call << prof.lf;
 
-    if (NULL == clEnqueueReadBuffer_original)
+    if (NULL == prof.interceptor.clEnqueueReadBuffer_original)
     {
-        clEnqueueReadBuffer_original = (clEnqueueReadBuffer_type) dlsym(RTLD_NEXT, call);
+        prof.interceptor.clEnqueueReadBuffer_original = (dvdt::Prof::Interceptor::clEnqueueReadBuffer_type) dlsym(RTLD_NEXT, call);
     }
 
     // Arguments.
-    std::cout << prefix << sep << call << sep << "queue"  << sep << FIXED_WIDTH_PTR(queue) << lf;
-    std::cout << prefix << sep << call << sep << "buffer" << sep << FIXED_WIDTH_PTR(buffer) << lf;
-    std::cout << prefix << sep << call << sep << "blocking" << sep << blocking << lf;
-    std::cout << prefix << sep << call << sep << "offset" << sep << offset << lf;
-    std::cout << prefix << sep << call << sep << "size" << sep << size << lf;
-    std::cout << prefix << sep << call << sep << "ptr" << sep << FIXED_WIDTH_PTR(ptr) << lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "queue"  << prof.sep << FIXED_WIDTH_PTR(queue) << prof.lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "buffer" << prof.sep << FIXED_WIDTH_PTR(buffer) << prof.lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "blocking" << prof.sep << blocking << prof.lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "offset" << prof.sep << offset << prof.lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "size" << prof.sep << size << prof.lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "ptr" << prof.sep << FIXED_WIDTH_PTR(ptr) << prof.lf;
     // - event_wait_list
-    std::cout << prefix << sep << call << sep << "event_wait_list";
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "event_wait_list";
     for (cl_uint e = 0; e < num_events_in_wait_list; ++e)
     {
-        std::cout << sep << event_wait_list[e];
+        std::cout << prof.sep << event_wait_list[e];
     }
-    std::cout << lf;
+    std::cout << prof.lf;
     // - event
-    std::cout << prefix << sep << call << sep << "event" << sep << FIXED_WIDTH_PTR(event) << lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "event" << prof.sep << FIXED_WIDTH_PTR(event) << prof.lf;
 
 #ifdef DVDT_PROF_TEST
 
@@ -392,7 +373,7 @@ clEnqueueReadBuffer(
     cl_event * prof_event = (NULL != event ? event : &prof_event_obj);
 
     // Original call.
-    errcode = clEnqueueReadBuffer_original(queue, buffer, blocking, offset, size, ptr,
+    errcode = prof.interceptor.clEnqueueReadBuffer_original(queue, buffer, blocking, offset, size, ptr,
         num_events_in_wait_list, event_wait_list, prof_event);
     if (CL_SUCCESS != errcode)
     {
@@ -405,7 +386,7 @@ clEnqueueReadBuffer(
 #endif
 
     // Return value.
-    std::cout << prefix << sep << call << sep << "errcode" << sep << errcode << lf << lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "errcode" << prof.sep << errcode << prof.lf << prof.lf;
 
     return errcode;
 }
@@ -429,29 +410,29 @@ clEnqueueWriteBuffer(
 
     // API call.
     const char * call = "clEnqueueWriteBuffer";
-    std::cout << prefix << sep << call << lf;
+    std::cout << prof.prefix << prof.sep << call << prof.lf;
 
-    if (NULL == clEnqueueWriteBuffer_original)
+    if (NULL == prof.interceptor.clEnqueueWriteBuffer_original)
     {
-        clEnqueueWriteBuffer_original = (clEnqueueWriteBuffer_type) dlsym(RTLD_NEXT, call);
+        prof.interceptor.clEnqueueWriteBuffer_original = (dvdt::Prof::Interceptor::clEnqueueWriteBuffer_type) dlsym(RTLD_NEXT, call);
     }
 
     // Arguments.
-    std::cout << prefix << sep << call << sep << "queue"  << sep << FIXED_WIDTH_PTR(queue) << lf;
-    std::cout << prefix << sep << call << sep << "buffer" << sep << FIXED_WIDTH_PTR(buffer) << lf;
-    std::cout << prefix << sep << call << sep << "blocking" << sep << blocking << lf;
-    std::cout << prefix << sep << call << sep << "offset" << sep << offset << lf;
-    std::cout << prefix << sep << call << sep << "size" << sep << size << lf;
-    std::cout << prefix << sep << call << sep << "ptr" << sep << FIXED_WIDTH_PTR(ptr) << lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "queue"  << prof.sep << FIXED_WIDTH_PTR(queue) << prof.lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "buffer" << prof.sep << FIXED_WIDTH_PTR(buffer) << prof.lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "blocking" << prof.sep << blocking << prof.lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "offset" << prof.sep << offset << prof.lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "size" << prof.sep << size << prof.lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "ptr" << prof.sep << FIXED_WIDTH_PTR(ptr) << prof.lf;
     // - event_wait_list
-    std::cout << prefix << sep << call << sep << "event_wait_list";
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "event_wait_list";
     for (cl_uint e = 0; e < num_events_in_wait_list; ++e)
     {
-        std::cout << sep << event_wait_list[e];
+        std::cout << prof.sep << event_wait_list[e];
     }
-    std::cout << lf;
+    std::cout << prof.lf;
     // - event
-    std::cout << prefix << sep << call << sep << "event" << sep << FIXED_WIDTH_PTR(event) << lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "event" << prof.sep << FIXED_WIDTH_PTR(event) << prof.lf;
 
 #ifdef DVDT_PROF_TEST
 
@@ -465,7 +446,8 @@ clEnqueueWriteBuffer(
     cl_event * prof_event = (NULL != event ? event : &prof_event_obj);
 
     // Original call.
-    errcode = clEnqueueWriteBuffer_original(queue, buffer, blocking, offset, size, ptr,
+    errcode = prof.interceptor.clEnqueueWriteBuffer_original(\
+        queue, buffer, blocking, offset, size, ptr,
         num_events_in_wait_list, event_wait_list, prof_event);
     if (CL_SUCCESS != errcode)
     {
@@ -478,7 +460,7 @@ clEnqueueWriteBuffer(
 #endif
 
     // Return value.
-    std::cout << prefix << sep << call << sep << "errcode" << sep << errcode << lf << lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "errcode" << prof.sep << errcode << prof.lf << prof.lf;
 
     return errcode;
 }
