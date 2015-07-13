@@ -28,8 +28,9 @@ else()
 endif()
 
 # Set build options.
-set(CMAKE_CXX_FLAGS "-O2 -g -W -Wall")
-message(STATUS "CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS "-O2 -W -Wall")
+message(STATUS "Using compiler flags: ${CMAKE_CXX_FLAGS}")
+message(STATUS "Using linker flags: ${CMAKE_SHARED_LINKER_FLAGS}")
 
 # Output directory for executables.
 SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
@@ -56,6 +57,6 @@ set(SOURCE
 add_library(prof SHARED ${SOURCE})
 target_link_libraries(prof dl)
 
-## Test descriptions are in a separate file.
-#include(CTest)
-#include(${PROJECT_SOURCE_DIR}/tests/CMakeLists.txt)
+# Test descriptions are in a separate file.
+include(CTest)
+include(${PROJECT_SOURCE_DIR}/tests/CMakeLists.txt)

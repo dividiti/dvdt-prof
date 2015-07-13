@@ -12,7 +12,7 @@ print '%s%s' % (call, id_)
 
 # Parse test source.
 source = {}
-with open(call + id_ + '.c', 'r') as f:
+with open(call + id_ + '.cpp', 'r') as f:
     source['text'] = f.read()
     source['context'] = re.search('\(cl_context\) (?P<context>%s)' % ptr_regex, source['text']).group('context')
     source['device'] = re.search('\(cl_device_id\) (?P<device>%s)' % ptr_regex, source['text']).group('device')

@@ -20,7 +20,7 @@ def match_init_list(text, lhs_regex, elem_regex):
 # Parse test source.
 def get_source(call, id_):
     source = {}
-    with open('%s%s.c' % (call, id_), 'r') as f:
+    with open('%s%s.cpp' % (call, id_), 'r') as f:
         text = f.read()
     source['queue'] = re.search('\(cl_command_queue\)(\s*)(?P<queue>%s)' % ptr_regex, text).group('queue')
     source['buffer'] = re.search('\(cl_mem\)(\s*)(?P<buffer>%s)' % ptr_regex, text).group('buffer')

@@ -31,7 +31,7 @@ def match_init_list(text, lhs_regex, elem_regex):
 
 # Parse test source.
 source = {}
-with open(call + id_ + '.c', 'r') as f:
+with open(call + id_ + '.cpp', 'r') as f:
     source['text'] = f.read()
     source['queue'] = re.search('\(cl_command_queue\) (?P<queue>%s)' % ptr_regex, source['text']).group('queue')
     source['kernel'] = re.search('\(cl_kernel\) (?P<kernel>%s)' % ptr_regex, source['text']).group('kernel')
