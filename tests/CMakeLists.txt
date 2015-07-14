@@ -18,32 +18,32 @@ target_link_libraries(prof_test dl)
 add_definitions(-D DVDT_PROF_TEST)
 add_definitions(-D DVDT_PROF_WALLCLOCK_TIMEOFDAY)
 
-# Add test sources.
-file(GLOB test_sources ${PROJECT_SOURCE_DIR}/tests/*.cpp)
-list(LENGTH test_sources num_test_sources)
-message(STATUS "Using ${num_test_sources} tests")
+# Add OpenCL API test sources.
+file(GLOB cl_api_test_sources ${PROJECT_SOURCE_DIR}/tests/cl*.cpp)
+list(LENGTH cl_api_test_sources num_cl_api_test_sources)
+message(STATUS "Using ${num_cl_api_test_sources} OpenCL API tests")
 
-# Build test binaries.
-foreach(test_cpp ${test_sources})
+# Build OpenCL API test binaries.
+foreach(test_cpp ${cl_api_test_sources})
     get_filename_component(test ${test_cpp} NAME_WE)
     add_executable(${test} ${test_cpp})
     add_dependencies(${test} prof_test)
     target_link_libraries(${test} prof_test OpenCL)
-    list(APPEND test_binaries ${test})
+    list(APPEND cl_api_test_binaries ${test})
 endforeach()
 
-# Add tests.
-foreach(test ${test_binaries})
+# Add OpenCL API tests.
+foreach(test ${cl_api_test_binaries})
     add_test(NAME ${test}
         COMMAND ${PROJECT_SOURCE_DIR}/tests/pipe.sh
             "${PROJECT_BINARY_DIR}/bin/${test}"
             "${PROJECT_SOURCE_DIR}/tests/${test}.py"
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/tests"
     )
-    string(CONCAT test_regex "${test}" ": PASSED")
+    string(CONCAT cl_api_test_regex "${test}" ": PASSED")
     set_tests_properties(${test}
         PROPERTIES
-            PASS_REGULAR_EXPRESSION ${test_regex})
+            PASS_REGULAR_EXPRESSION ${cl_api_test_regex})
 endforeach()
 
 # Custom target: "make check"

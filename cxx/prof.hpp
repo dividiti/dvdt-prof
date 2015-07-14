@@ -7,8 +7,13 @@
 
 #include <dlfcn.h>
 
+#include <cstdlib>
 #include <iostream>
-#include <iomanip>
+#include <sstream>
+
+#include <string>
+#include <vector>
+#include <map>
 
 #ifdef __APPLE__
 #include <OpenCL/opencl.h>
@@ -31,6 +36,7 @@
 
 
 #if (1 == DVDT_PROF_TEST)
+#include <iomanip>
 #define FIXED_WIDTH_PTR(ptr) "0x" << std::hex << std::setw(8) << std::setfill('0') << (size_t)(ptr) << std::dec
 #else
 #define FIXED_WIDTH_PTR(ptr) (ptr)
@@ -82,6 +88,10 @@ public:
         // Cached OpenCL context.
         cl_context context;
 
+        // Mapping a kernel to a local work size tuple that will be used
+        // to override the local work size specified in the program.
+        std::map<std::string, size_t*> kernel_lws_map;
+
         // Constructor.
         Interceptor() :
             clCreateCommandQueue_original(NULL),
@@ -91,10 +101,65 @@ public:
             clEnqueueReadBuffer_original(NULL),
             clEnqueueWriteBuffer_original(NULL),
             context(NULL)
-        {}
+        {
+            if (const char * kernel_lws_list = getenv("DVDT_PROF_LWS"))
+            {
+                // DVDT_PROF_LWS="kernel0:lid0,lid1,lid2 kernel1:lid0,lid1,lid2 ..."
+                // Spaces delimit elems per kernel; colons delimit kernel names from
+                // local work size; commas delimit local work size dimensions.
+                const char per_kernel_delim = ' ';
+                const std::vector<std::string> per_kernel_elems =
+                    split(std::string(kernel_lws_list), per_kernel_delim);
+
+                for (std::vector<std::string>::const_iterator elems_i = per_kernel_elems.begin(),
+                    elems_e = per_kernel_elems.end(); elems_i != elems_e; ++elems_i) 
+                {
+                    const std::string elem(*elems_i);
+                    
+                    const char kernel_lws_delim = ':';
+                    const std::string::size_type pos = elem.find(kernel_lws_delim);
+                    assert(pos != std::string::npos);
+                    const std::string kernel = elem.substr(0, pos);
+                    const std::string lws_list = elem.substr(pos+1);
+                    
+                    const char lws_delim = ',';
+                    const std::vector<std::string> lws_vector = split(lws_list, lws_delim);
+                    const std::vector<std::string>::size_type n = lws_vector.size();
+                    assert((1 <= n) && (n <= Prof::max_work_dim));
+                    // To be deallocated in the destructor.
+                    size_t * lws = new size_t[n];
+                    for (std::vector<std::string>::size_type i = 0; i < n; ++i)
+                    {
+                        std::stringstream(lws_vector[i]) >> lws[i];
+                    }
+                    kernel_lws_map.insert(std::pair<std::string, size_t*>(kernel, lws));
+                }
+            }
+        }
 
         // Destructor.
-        ~Interceptor() {}
+        ~Interceptor() 
+        {
+            // Free local work size values.
+            for (std::map<std::string, size_t*>::iterator i = kernel_lws_map.begin(),
+                e = kernel_lws_map.end(); i != e; i++)
+            {
+                delete[] i->second;
+            }
+        }
+
+    private:
+        std::vector<std::string> split(const std::string & str, char delim) 
+        {
+            std::vector<std::string> elems;
+            std::stringstream ss(str);
+            std::string elem;
+            while (std::getline(ss, elem, delim))
+            {
+                elems.push_back(elem);
+            }
+            return elems;
+        }
 
     }; // inner class Interceptor
 
