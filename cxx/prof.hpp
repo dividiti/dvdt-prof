@@ -85,12 +85,9 @@ public:
         clEnqueueReadBuffer_type    clEnqueueReadBuffer_original;
         clEnqueueWriteBuffer_type   clEnqueueWriteBuffer_original;
 
-        // Cached OpenCL context.
-        cl_context context;
-
         // Mapping a kernel to a local work size tuple that will be used
         // to override the local work size specified in the program.
-        std::map<std::string, size_t*> kernel_lws_map;
+        const size_t * update_lws(const char * name, const size_t * program_lws);
 
         // Constructor.
         Interceptor() :
@@ -100,40 +97,16 @@ public:
             clEnqueueNDRangeKernel_original(NULL),
             clEnqueueReadBuffer_original(NULL),
             clEnqueueWriteBuffer_original(NULL),
+            kernel_lws_null(false),
             context(NULL)
         {
-            if (const char * kernel_lws_list = getenv("DVDT_PROF_LWS"))
+            if (getenv("DVDT_PROF_LWS_NULL"))
             {
-                // DVDT_PROF_LWS="kernel0:lid0,lid1,lid2 kernel1:lid0,lid1,lid2 ..."
-                // Spaces delimit elems per kernel; colons delimit kernel names from
-                // local work size; commas delimit local work size dimensions.
-                const char per_kernel_delim = ' ';
-                const std::vector<std::string> per_kernel_elems =
-                    split(std::string(kernel_lws_list), per_kernel_delim);
-
-                for (std::vector<std::string>::const_iterator elems_i = per_kernel_elems.begin(),
-                    elems_e = per_kernel_elems.end(); elems_i != elems_e; ++elems_i) 
-                {
-                    const std::string elem(*elems_i);
-                    
-                    const char kernel_lws_delim = ':';
-                    const std::string::size_type pos = elem.find(kernel_lws_delim);
-                    assert(pos != std::string::npos);
-                    const std::string kernel = elem.substr(0, pos);
-                    const std::string lws_list = elem.substr(pos+1);
-                    
-                    const char lws_delim = ',';
-                    const std::vector<std::string> lws_vector = split(lws_list, lws_delim);
-                    const std::vector<std::string>::size_type n = lws_vector.size();
-                    assert((1 <= n) && (n <= Prof::max_work_dim));
-                    // To be deallocated in the destructor.
-                    size_t * lws = new size_t[n];
-                    for (std::vector<std::string>::size_type i = 0; i < n; ++i)
-                    {
-                        std::stringstream(lws_vector[i]) >> lws[i];
-                    }
-                    kernel_lws_map.insert(std::pair<std::string, size_t*>(kernel, lws));
-                }
+                kernel_lws_null = true;
+            }
+            else if (const char * kernel_lws_list = getenv("DVDT_PROF_LWS"))
+            {
+                update_kernel_lws_map(kernel_lws_list);
             }
         }
 
@@ -149,6 +122,25 @@ public:
         }
 
     private:
+        // The map is populated by parsing an environment variable DVDT_PROF_LWS
+        // in the following format:
+        //
+        //   "kernel_A:lws_A0,lws_A1,lws_A2 kernel_B:lws_B0,lws_B1,lws_B1 ..."
+        //
+        // Namely, the list elements are separated by spaces; the kernel names
+        // (strings) are separated from the local work size tuple by colons;
+        // the tuple elements (unsigned integers) are delimited by commas.
+        // The number of elements in a tuple must match the number of work-group
+        // dimensions as specified in the program or start with the value of 0
+        // to use NULL as the local work size for this kernel.
+        // (For convenience, kernel_lws_null allows to use NULL for all kernels
+        // in the program.)
+        std::map<std::string, size_t*> kernel_lws_map;
+
+        // True if NULL is to be used as the local work size for all kernels.
+        bool kernel_lws_null;
+
+        // Helper method for update_kernel_lws_map().
         std::vector<std::string> split(const std::string & str, char delim) 
         {
             std::vector<std::string> elems;
@@ -160,6 +152,13 @@ public:
             }
             return elems;
         }
+
+        // See kernel_lws_map.
+        void update_kernel_lws_map(const char * kernel_lws_list);
+
+    public:
+        // Cached OpenCL context. (Currently unused.)
+        cl_context context;
 
     }; // inner class Interceptor
 
@@ -192,8 +191,70 @@ public:
 }; // class Prof
 
 
-} // namespace dvdt
+void
+Prof::Interceptor::update_kernel_lws_map(const char * kernel_lws_list)
+{
+    const char per_kernel_delim = ' ';
+    const char kernel_lws_delim = ':';
+    const char lws_delim = ',';
 
+    const std::vector<std::string> per_kernel_elems =
+        split(std::string(kernel_lws_list), per_kernel_delim);
+
+    for (std::vector<std::string>::const_iterator elems_i = per_kernel_elems.begin(),
+        elems_e = per_kernel_elems.end(); elems_i != elems_e; ++elems_i) 
+    {
+        const std::string elem(*elems_i);
+ 
+        const std::string::size_type pos = elem.find(kernel_lws_delim);
+        assert(pos != std::string::npos);
+        const std::string kernel = elem.substr(0, pos);
+        const std::string lws_list = elem.substr(pos+1);
+
+        const std::vector<std::string> lws_vector = split(lws_list, lws_delim);
+        const std::vector<std::string>::size_type n = lws_vector.size();
+        assert((1 <= n) && (n <= Prof::max_work_dim));
+        size_t * lws = new size_t[n]; // To be deallocated in the destructor.
+        for (std::vector<std::string>::size_type i = 0; i < n; ++i)
+        {
+            std::stringstream(lws_vector[i]) >> lws[i];
+        }
+        // TODO: allow updating the map (e.g. for adaptation).
+        assert(kernel_lws_map.count(kernel) == 0);
+        kernel_lws_map.insert(std::pair<std::string, size_t*>(kernel, lws));
+    }
+
+    return;
+} // Prof::Interceptor::update_kernel_lws_map()
+
+
+const size_t *
+Prof::Interceptor::update_lws(const char * name, const size_t * program_lws)
+{
+    if (kernel_lws_null)
+    {
+        return NULL;
+    }
+
+    std::map<std::string, size_t *>::iterator it = kernel_lws_map.find(std::string(name));
+    if (kernel_lws_map.end() != it)
+    {
+        const size_t * lws = it->second;
+        if (0 == lws[0])
+        {
+            program_lws = NULL;
+        }
+        else
+        {
+            program_lws = lws;
+        }
+    }
+  
+    return program_lws;
+
+} // Prof::Interceptor::update_lws()
+
+} // namespace dvdt
 
 
 #endif // #ifndef DVDT_PROF_HPP

@@ -58,7 +58,6 @@ output_profiling_info(const char * call, cl_event * prof_event)
 // - clCreateCommandQueue()
 // - clBuildProgram()
 // - clCreateKernel()
-//
 // - clEnqueueNDRangeKernel()
 // - clEnqueueReadBuffer()
 // - clEnqueueWriteBuffer()
@@ -74,7 +73,7 @@ clCreateCommandQueue(
     cl_int * errcode_ret) CL_API_SUFFIX__VERSION_1_0 
 {
     // Return value.
-    cl_command_queue queue;
+    cl_command_queue queue = (cl_command_queue) 0x0;
 
     // API call.
     const char * call = "clCreateCommandQueue";
@@ -96,11 +95,7 @@ clCreateCommandQueue(
     std::cout << prof.prefix << prof.sep << call << prof.sep << "properties"  << prof.sep << properties << prof.lf;
     std::cout << prof.prefix << prof.sep << call << prof.sep << "errcode_ret" << prof.sep << FIXED_WIDTH_PTR(errcode_ret) << prof.lf;
 
-#ifdef DVDT_PROF_TEST
-
-    queue = (cl_command_queue) 0x0;
-
-#else
+#ifndef DVDT_PROF_TEST
     dvdt::start_timestamp(call);
 
     // Original call.
@@ -128,7 +123,7 @@ clBuildProgram(
     void * user_data) CL_API_SUFFIX__VERSION_1_0
 {
     // Return value.
-    cl_int errcode;
+    cl_int errcode = CL_SUCCESS;
 
     // API call.
     const char * call = "clBuildProgram";
@@ -147,11 +142,7 @@ clBuildProgram(
     // TODO: pfn_notify.
     // TODO: user_data.
 
-#ifdef DVDT_PROF_TEST
-
-    errcode = CL_SUCCESS;
-
-#else
+#ifndef DVDT_PROF_TEST
     dvdt::start_timestamp(call);
 
     // Original call.
@@ -177,7 +168,7 @@ clCreateKernel(
     cl_int * errcode_ret) CL_API_SUFFIX__VERSION_1_0
 {
     // Return value.
-    cl_kernel kernel;
+    cl_kernel kernel = (cl_kernel) 0x0;
 
     // API call.
     const char * call = "clCreateKernel";
@@ -193,11 +184,7 @@ clCreateKernel(
     std::cout << prof.prefix << prof.sep << call << prof.sep << "name" << prof.sep << kernel_name << prof.lf;
     std::cout << prof.prefix << prof.sep << call << prof.sep << "errcode_ret" << prof.sep << FIXED_WIDTH_PTR(errcode_ret) << prof.lf;
 
-#ifdef DVDT_PROF_TEST
-
-    kernel = (cl_kernel) 0x0;
-
-#else
+#ifndef DVDT_PROF_TEST
     dvdt::start_timestamp(call);
 
     // Original call.
@@ -228,7 +215,7 @@ clEnqueueNDRangeKernel(
     cl_event *event) CL_API_SUFFIX__VERSION_1_0
 {
     // Return value.
-    cl_int errcode;
+    cl_int errcode = CL_SUCCESS;
 
     // API call.
     const char * call = "clEnqueueNDRangeKernel";
@@ -238,6 +225,24 @@ clEnqueueNDRangeKernel(
     {
         prof.interceptor.clEnqueueNDRangeKernel_original = (dvdt::Prof::Interceptor::clEnqueueNDRangeKernel_type) dlsym(RTLD_NEXT, call);
     }
+
+    // Kernel name.
+#ifdef DVDT_PROF_TEST
+    const char name[] = "dvdt_prof_kernel";
+#else
+    const size_t max_name_length = 80;
+    char name[max_name_length];
+    {
+        size_t name_length;
+        cl_int info_errcode = clGetKernelInfo(\
+            kernel, CL_KERNEL_FUNCTION_NAME, max_name_length, name, &name_length);
+        assert(info_errcode == CL_SUCCESS && "Failed to get kernel name");
+        assert(name_length <= max_name_length);
+    }
+
+    local_work_size = prof.interceptor.update_lws(name, local_work_size);
+#endif
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "name"  << prof.sep << name << prof.lf;
 
     // Arguments.
     std::cout << prof.prefix << prof.sep << call << prof.sep << "queue"  << prof.sep << FIXED_WIDTH_PTR(queue) << prof.lf;
@@ -287,11 +292,7 @@ clEnqueueNDRangeKernel(
     // - event
     std::cout << prof.prefix << prof.sep << call << prof.sep << "event" << prof.sep << FIXED_WIDTH_PTR(event) << prof.lf;
 
-#ifdef DVDT_PROF_TEST
-
-    errcode = CL_SUCCESS;
-
-#else
+#ifndef DVDT_PROF_TEST
     dvdt::start_timestamp(call);
 
     // Event object needed if 'event' is NULL.
@@ -333,7 +334,7 @@ clEnqueueReadBuffer(
     cl_event *event) CL_API_SUFFIX__VERSION_1_0
 {
     // Return value.
-    cl_int errcode;
+    cl_int errcode = CL_SUCCESS;
 
     // API call.
     const char * call = "clEnqueueReadBuffer";
@@ -361,11 +362,7 @@ clEnqueueReadBuffer(
     // - event
     std::cout << prof.prefix << prof.sep << call << prof.sep << "event" << prof.sep << FIXED_WIDTH_PTR(event) << prof.lf;
 
-#ifdef DVDT_PROF_TEST
-
-    errcode = CL_SUCCESS;
-
-#else
+#ifndef DVDT_PROF_TEST
     dvdt::start_timestamp(call);
 
     // Event object needed if 'event' is NULL.
@@ -406,7 +403,7 @@ clEnqueueWriteBuffer(
     cl_event *event) CL_API_SUFFIX__VERSION_1_0
 {
     // Return value.
-    cl_int errcode;
+    cl_int errcode = CL_SUCCESS;
 
     // API call.
     const char * call = "clEnqueueWriteBuffer";
@@ -434,11 +431,7 @@ clEnqueueWriteBuffer(
     // - event
     std::cout << prof.prefix << prof.sep << call << prof.sep << "event" << prof.sep << FIXED_WIDTH_PTR(event) << prof.lf;
 
-#ifdef DVDT_PROF_TEST
-
-    errcode = CL_SUCCESS;
-
-#else
+#ifndef DVDT_PROF_TEST
     dvdt::start_timestamp(call);
 
     // Event object needed if 'event' is NULL.

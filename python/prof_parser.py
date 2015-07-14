@@ -77,6 +77,10 @@ def match_clCreateKernel(output, result):
 def match_clEnqueueNDRangeKernel(output, result):
     call = 'clEnqueueNDRangeKernel'
 
+    # Name.
+    result['name']   = re.search('%s %s %s (?P<name>%s)' % \
+        (prefix, call, 'name', opts_regex), output).group('name')
+
     # Arguments.
     result['queue']  = re.search('%s %s %s (?P<queue>%s)' % \
         (prefix, call, 'queue', ptr_regex), output).group('queue')

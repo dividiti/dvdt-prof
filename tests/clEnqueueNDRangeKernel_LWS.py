@@ -16,7 +16,7 @@ null_lws = 0
 
 # Test info.
 call = 'clEnqueueNDRangeKernel'
-id_  = ''
+id_  = '_LWS'
 print '%s%s' % (call, id_)
 
 # Parse initialisation list of form: lhs = { elem, ... }.
