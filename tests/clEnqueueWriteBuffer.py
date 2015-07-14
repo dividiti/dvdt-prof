@@ -6,7 +6,7 @@ from clEnqueueReadOrWriteBuffer import run
 
 # Test info.
 call = 'clEnqueueWriteBuffer'
-id_  = ''
+_id  = ''
 
 # Run test.
-run(call, id_)
+run(call, _id)

@@ -7,12 +7,12 @@ from prof_parser import ptr_regex
 
 # Test info.
 call = 'clCreateCommandQueue'
-id_  = ''
-print '%s%s' % (call, id_)
+_id  = ''
+print '%s%s' % (call, _id)
 
 # Parse test source.
 source = {}
-with open(call + id_ + '.cpp', 'r') as f:
+with open(call + _id + '.cpp', 'r') as f:
     source['text'] = f.read()
     source['context'] = re.search('\(cl_context\) (?P<context>%s)' % ptr_regex, source['text']).group('context')
     source['device'] = re.search('\(cl_device_id\) (?P<device>%s)' % ptr_regex, source['text']).group('device')
@@ -37,5 +37,5 @@ status &= (source['device'] == result['device'])
 status &= (source['properties'] == result['properties'])
 status &= (source['errcode_ret']  == result['errcode_ret'])
 
-print '%s%s: %s' % (call, id_, 'PASSED' if status else 'FAILED')
+print '%s%s: %s' % (call, _id, 'PASSED' if status else 'FAILED')
 print

@@ -227,9 +227,7 @@ clEnqueueNDRangeKernel(
     }
 
     // Kernel name.
-#ifdef DVDT_PROF_TEST
-    const char name[] = "dvdt_prof_kernel";
-#else
+#ifndef DVDT_PROF_TEST
     const size_t max_name_length = 80;
     char name[max_name_length];
     {
@@ -239,10 +237,12 @@ clEnqueueNDRangeKernel(
         assert(info_errcode == CL_SUCCESS && "Failed to get kernel name");
         assert(name_length <= max_name_length);
     }
-
-    local_work_size = prof.interceptor.update_lws(name, local_work_size);
+#else
+    const char name[] = "dvdt_prof_kernel";
 #endif
     std::cout << prof.prefix << prof.sep << call << prof.sep << "name"  << prof.sep << name << prof.lf;
+
+    local_work_size = prof.interceptor.update_lws(name, local_work_size);
 
     // Arguments.
     std::cout << prof.prefix << prof.sep << call << prof.sep << "queue"  << prof.sep << FIXED_WIDTH_PTR(queue) << prof.lf;

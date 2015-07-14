@@ -194,23 +194,33 @@ public:
 void
 Prof::Interceptor::update_kernel_lws_map(const char * kernel_lws_list)
 {
-    const char per_kernel_delim = ' ';
-    const char kernel_lws_delim = ':';
-    const char lws_delim = ',';
+    // Strip surrounding double quotation marks if present.
+    std::string kernel_lws_list_str(kernel_lws_list);
+    {
+        const char double_quote = '\"';
+        const std::string::size_type first = kernel_lws_list_str.find(double_quote);
+        const std::string::size_type last = kernel_lws_list_str.find_last_of(double_quote);
+        kernel_lws_list_str = kernel_lws_list_str.substr(first+1, last-(first+1));
+    }
 
-    const std::vector<std::string> per_kernel_elems =
-        split(std::string(kernel_lws_list), per_kernel_delim);
+    // Split space-separated list of elements into vector of elements.
+    const char per_kernel_delim = ' ';
+    const std::vector<std::string> per_kernel_elems = split(kernel_lws_list_str, per_kernel_delim);
 
     for (std::vector<std::string>::const_iterator elems_i = per_kernel_elems.begin(),
         elems_e = per_kernel_elems.end(); elems_i != elems_e; ++elems_i) 
     {
         const std::string elem(*elems_i);
- 
+
+        // Split element into two colon-separated strings: kernel name and lws tuple.
+        const char kernel_lws_delim = ':';
         const std::string::size_type pos = elem.find(kernel_lws_delim);
         assert(pos != std::string::npos);
         const std::string kernel = elem.substr(0, pos);
         const std::string lws_list = elem.substr(pos+1);
 
+        // Split comma-separated lws tuple string into vector of lws dimensions.
+        const char lws_delim = ',';
         const std::vector<std::string> lws_vector = split(lws_list, lws_delim);
         const std::vector<std::string>::size_type n = lws_vector.size();
         assert((1 <= n) && (n <= Prof::max_work_dim));
@@ -219,12 +229,13 @@ Prof::Interceptor::update_kernel_lws_map(const char * kernel_lws_list)
         {
             std::stringstream(lws_vector[i]) >> lws[i];
         }
-        // TODO: allow updating the map (e.g. for adaptation).
+        // TODO: allow updating the map (e.g. for runtime adaptation).
         assert(kernel_lws_map.count(kernel) == 0);
         kernel_lws_map.insert(std::pair<std::string, size_t*>(kernel, lws));
     }
 
     return;
+
 } // Prof::Interceptor::update_kernel_lws_map()
 
 
@@ -235,7 +246,6 @@ Prof::Interceptor::update_lws(const char * name, const size_t * program_lws)
     {
         return NULL;
     }
-
     std::map<std::string, size_t *>::iterator it = kernel_lws_map.find(std::string(name));
     if (kernel_lws_map.end() != it)
     {

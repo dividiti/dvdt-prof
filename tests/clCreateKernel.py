@@ -8,12 +8,12 @@ from prof_parser import opts_regex
 
 # Test info.
 call = 'clCreateKernel'
-id_  = ''
-print '%s%s' % (call, id_)
+_id  = ''
+print '%s%s' % (call, _id)
 
 # Parse test source.
 source = {}
-with open(call + id_ + '.cpp', 'r') as f:
+with open(call + _id + '.cpp', 'r') as f:
     source['text'] = f.read()
     source['program'] = re.search('\(cl_program\) (?P<program>%s)' % ptr_regex, source['text']).group('program')
     source['name'] = re.search('kernel_name = \"(?P<name>%s)\"' % opts_regex, source['text']).group('name')
@@ -35,5 +35,5 @@ status &= (source['program'] == result['program'])
 status &= (source['name'] == result['name'])
 status &= (source['kernel'] == result['kernel'])
 
-print '%s%s: %s' % (call, id_, 'PASSED' if status else 'FAILED')
+print '%s%s: %s' % (call, _id, 'PASSED' if status else 'FAILED')
 print

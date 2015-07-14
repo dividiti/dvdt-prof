@@ -18,9 +18,9 @@ def match_init_list(text, lhs_regex, elem_regex):
     return result
 
 # Parse test source.
-def get_source(call, id_):
+def get_source(call, _id):
     source = {}
-    with open('%s%s.cpp' % (call, id_), 'r') as f:
+    with open('%s%s.cpp' % (call, _id), 'r') as f:
         text = f.read()
     source['queue'] = re.search('\(cl_command_queue\)(\s*)(?P<queue>%s)' % ptr_regex, text).group('queue')
     source['buffer'] = re.search('\(cl_mem\)(\s*)(?P<buffer>%s)' % ptr_regex, text).group('buffer')
@@ -64,11 +64,11 @@ def cmp_source_and_result(source, result):
     status &= (cmp(source['profiling'], result['profiling']) == 0)
     return status
 
-def run(call, id_):
-    print '%s%s' % (call, id_)
+def run(call, _id):
+    print '%s%s' % (call, _id)
 
     # Parse test source file.
-    source = get_source(call, id_)
+    source = get_source(call, _id)
     print 'SOURCE'
     print source
 
@@ -82,5 +82,5 @@ def run(call, id_):
     print 'RESULT'
     print result
 
-    print '%s%s: %s' % (call, id_, 'PASSED' if cmp_source_and_result(source, result) else 'FAILED')
+    print '%s%s: %s' % (call, _id, 'PASSED' if cmp_source_and_result(source, result) else 'FAILED')
     print

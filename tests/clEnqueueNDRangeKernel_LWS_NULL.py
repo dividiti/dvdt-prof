@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import sys, re
+import os, sys, re
 
 sys.path.append('../python')
 from prof_parser import prof_parse
@@ -16,8 +16,15 @@ null_lws = 0
 
 # Test info.
 call = 'clEnqueueNDRangeKernel'
-_id  = ''
+_id  = '_LWS_NULL'
 print '%s%s' % (call, _id)
+print
+
+# Environment.
+env = dict(os.environ)
+print 'DVDT_PROF_LWS_NULL=%s' % env['DVDT_PROF_LWS_NULL']
+print 'LD_PRELOAD=%s' % env['LD_PRELOAD']
+print
 
 # Parse initialisation list of form: lhs = { elem, ... }.
 def match_init_list(text, lhs_regex, elem_regex):
@@ -41,7 +48,9 @@ with open(call + _id + '.cpp', 'r') as f:
     source['offset'] = ([int(i) for i in offset] + [default_offset] * (max_work_dim - work_dim)) if offset else [null_offset] * max_work_dim
     gws = match_init_list(source['text'], 'global_work_size\[%d\]' % work_dim, int_regex)
     source['gws'] = [int(i) for i in gws] + [default_gws] * (max_work_dim - work_dim)
-    lws = match_init_list(source['text'], 'local_work_size\[%d\]' % work_dim, int_regex)
+
+    # Incerceptor sets local work size to NULL when DVDT_PROF_LWS_NULL is defined, ignore test source here.
+    lws = None
     source['lws'] = ([int(i) for i in lws] + [default_lws] * (max_work_dim - work_dim)) if lws else [null_lws] * max_work_dim
 
     num_events = int(re.search('num_events_in_wait_list(\s*)=(\s*)(?P<num_events>\d+)', source['text']).group('num_events'))

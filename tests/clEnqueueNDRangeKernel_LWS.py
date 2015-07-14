@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import sys, re
+import os, sys, re
 
 sys.path.append('../python')
 from prof_parser import prof_parse
@@ -16,8 +16,15 @@ null_lws = 0
 
 # Test info.
 call = 'clEnqueueNDRangeKernel'
-id_  = '_LWS'
-print '%s%s' % (call, id_)
+_id  = '_LWS'
+print '%s%s' % (call, _id)
+print
+
+# Environment.
+env = dict(os.environ)
+print 'DVDT_PROF_LWS=%s' % env['DVDT_PROF_LWS']
+print 'LD_PRELOAD=%s' % env['LD_PRELOAD']
+print
 
 # Parse initialisation list of form: lhs = { elem, ... }.
 def match_init_list(text, lhs_regex, elem_regex):
@@ -31,7 +38,7 @@ def match_init_list(text, lhs_regex, elem_regex):
 
 # Parse test source.
 source = {}
-with open(call + id_ + '.cpp', 'r') as f:
+with open(call + _id + '.cpp', 'r') as f:
     source['text'] = f.read()
     source['queue'] = re.search('\(cl_command_queue\) (?P<queue>%s)' % ptr_regex, source['text']).group('queue')
     source['kernel'] = re.search('\(cl_kernel\) (?P<kernel>%s)' % ptr_regex, source['text']).group('kernel')
@@ -41,7 +48,8 @@ with open(call + id_ + '.cpp', 'r') as f:
     source['offset'] = ([int(i) for i in offset] + [default_offset] * (max_work_dim - work_dim)) if offset else [null_offset] * max_work_dim
     gws = match_init_list(source['text'], 'global_work_size\[%d\]' % work_dim, int_regex)
     source['gws'] = [int(i) for i in gws] + [default_gws] * (max_work_dim - work_dim)
-    lws = match_init_list(source['text'], 'local_work_size\[%d\]' % work_dim, int_regex)
+    # Interceptor updates local work size from DVDT_PROF_LWS, so ignore test source and parse DVDT_PROF_LWS instead.
+    lws = (env['DVDT_PROF_LWS'].strip('"').split(':')[1]).split(',')
     source['lws'] = ([int(i) for i in lws] + [default_lws] * (max_work_dim - work_dim)) if lws else [null_lws] * max_work_dim
 
     num_events = int(re.search('num_events_in_wait_list(\s*)=(\s*)(?P<num_events>\d+)', source['text']).group('num_events'))
@@ -81,5 +89,5 @@ status &= (cmp(source['event_wait_list'], result['event_wait_list']) == 0)
 status &= (source['event'] == result['event'])
 status &= (cmp(source['profiling'], result['profiling']) == 0)
 
-print '%s%s: %s' % (call, id_, 'PASSED' if status else 'FAILED')
+print '%s%s: %s' % (call, _id, 'PASSED' if status else 'FAILED')
 print
