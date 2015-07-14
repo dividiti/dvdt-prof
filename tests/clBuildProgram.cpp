@@ -1,5 +1,5 @@
 #include <CL/opencl.h>
-#include <assert.h>
+#include <cassert>
 
 int main()
 {

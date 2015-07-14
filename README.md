@@ -35,7 +35,7 @@ Place the source into `${SRC_DIR}`. Create `${BUILD_DIR}`.
 ```
 $ cd ${BUILD_DIR}
 $ cmake ${SRC_DIR}
-$ make
+$ make prof
 ```
 
 `${SRC_DIR}/lib` now contains `libprof.so`.

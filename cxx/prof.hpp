@@ -8,6 +8,7 @@
 #include <dlfcn.h>
 
 #include <cstdlib>
+#include <cassert>
 #include <iostream>
 #include <sstream>
 
