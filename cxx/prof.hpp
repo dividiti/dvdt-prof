@@ -56,25 +56,25 @@ public:
         // Types of OpenCL API functions.
         typedef cl_command_queue (*clCreateCommandQueue_type)\
             (cl_context, cl_device_id, cl_command_queue_properties, cl_int *errcode_ret);
-        
+
         typedef cl_program (*clCreateProgramWithSource_type)\
             (cl_context, cl_uint count, const char ** strings, const size_t * lengths, cl_int * errcode_ret);
-        
+
         typedef cl_int (*clBuildProgram_type)\
             (cl_program, cl_uint, const cl_device_id *, const char *, void (CL_CALLBACK *)(cl_program, void *), void *);
-        
+
         typedef cl_kernel (*clCreateKernel_type)\
             (cl_program, const char * givenKernelName, cl_int * errcode_ret);
-        
+
         typedef cl_int (*clSetKernelArg_type)\
             (cl_kernel, cl_uint, size_t, const void *);
-        
+
         typedef cl_int (*clEnqueueNDRangeKernel_type)\
             (cl_command_queue, cl_kernel, cl_uint, const size_t *, const size_t *, const size_t *, cl_uint, const cl_event *, cl_event *);
-        
+
         typedef cl_int (*clEnqueueReadBuffer_type)\
             (cl_command_queue, cl_mem, cl_bool, size_t, size_t, void *, cl_uint, const cl_event *, cl_event *);
-        
+
         typedef cl_int (*clEnqueueWriteBuffer_type)\
             (cl_command_queue, cl_mem, cl_bool, size_t, size_t, const void *, cl_uint, const cl_event *, cl_event *);
 
@@ -112,7 +112,7 @@ public:
         }
 
         // Destructor.
-        ~Interceptor() 
+        ~Interceptor()
         {
             // Free local work size values.
             for (std::map<std::string, size_t*>::iterator i = kernel_lws_map.begin(),
@@ -142,7 +142,7 @@ public:
         bool kernel_lws_null;
 
         // Helper method for update_kernel_lws_map().
-        std::vector<std::string> split(const std::string & str, char delim) 
+        std::vector<std::string> split(const std::string & str, char delim)
         {
             std::vector<std::string> elems;
             std::stringstream ss(str);
@@ -165,11 +165,11 @@ public:
 
     // Interceptor object.
     Interceptor interceptor;
-        
+
     // Typical implementation-defined constants.
     // TODO: query the actual implementation.
     static const cl_uint max_work_dim = 3;
-   
+
     // Default values of work size parameters.
     static const size_t default_local_work_size = 1;
     static const size_t null_local_work_size = 0;
@@ -209,7 +209,7 @@ Prof::Interceptor::update_kernel_lws_map(const char * kernel_lws_list)
     const std::vector<std::string> per_kernel_elems = split(kernel_lws_list_str, per_kernel_delim);
 
     for (std::vector<std::string>::const_iterator elems_i = per_kernel_elems.begin(),
-        elems_e = per_kernel_elems.end(); elems_i != elems_e; ++elems_i) 
+        elems_e = per_kernel_elems.end(); elems_i != elems_e; ++elems_i)
     {
         const std::string elem(*elems_i);
 
@@ -260,7 +260,7 @@ Prof::Interceptor::update_lws(const char * name, const size_t * program_lws)
             program_lws = lws;
         }
     }
-  
+
     return program_lws;
 
 } // Prof::Interceptor::update_lws()

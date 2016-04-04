@@ -70,7 +70,7 @@ clCreateCommandQueue(
     cl_context context,
     cl_device_id device,
     cl_command_queue_properties properties,
-    cl_int * errcode_ret) CL_API_SUFFIX__VERSION_1_0 
+    cl_int * errcode_ret) CL_API_SUFFIX__VERSION_1_0
 {
     // Return value.
     cl_command_queue queue = (cl_command_queue) 0x0;
@@ -101,7 +101,7 @@ clCreateCommandQueue(
     // Original call.
     queue = prof.interceptor.clCreateCommandQueue_original(\
         context, device, properties | CL_QUEUE_PROFILING_ENABLE, errcode_ret);
-    
+
     dvdt::end_timestamp(call);
 #endif
 
