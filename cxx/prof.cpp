@@ -303,10 +303,6 @@ clEnqueueNDRangeKernel(
     errcode = prof.interceptor.clEnqueueNDRangeKernel_original(\
         queue, kernel, work_dim, global_work_offset, global_work_size, local_work_size,\
         num_events_in_wait_list, event_wait_list, prof_event);
-    if (CL_SUCCESS != errcode)
-    {
-        return errcode;
-    }
 
     dvdt::output_profiling_info(call, prof_event);
 
@@ -372,10 +368,6 @@ clEnqueueReadBuffer(
     // Original call.
     errcode = prof.interceptor.clEnqueueReadBuffer_original(queue, buffer, blocking, offset, size, ptr,
         num_events_in_wait_list, event_wait_list, prof_event);
-    if (CL_SUCCESS != errcode)
-    {
-        return errcode;
-    }
 
     dvdt::output_profiling_info(call, prof_event);
 
@@ -442,10 +434,6 @@ clEnqueueWriteBuffer(
     errcode = prof.interceptor.clEnqueueWriteBuffer_original(\
         queue, buffer, blocking, offset, size, ptr,
         num_events_in_wait_list, event_wait_list, prof_event);
-    if (CL_SUCCESS != errcode)
-    {
-        return errcode;
-    }
 
     dvdt::output_profiling_info(call, prof_event);
 
