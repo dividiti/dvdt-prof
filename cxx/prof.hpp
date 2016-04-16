@@ -1,5 +1,5 @@
 //
-// 2015 (c) dividiti
+// 2015-2016 (c) dividiti
 //
 
 #ifndef DVDT_PROF_HPP
@@ -69,6 +69,9 @@ public:
         typedef cl_int (*clSetKernelArg_type)\
             (cl_kernel, cl_uint, size_t, const void *);
 
+        typedef cl_mem (clCreateBuffer_type)\
+            (cl_mem_flags, size_t, void *, cl_int *);
+
         typedef cl_int (*clEnqueueNDRangeKernel_type)\
             (cl_command_queue, cl_kernel, cl_uint, const size_t *, const size_t *, const size_t *, cl_uint, const cl_event *, cl_event *);
 
@@ -82,6 +85,8 @@ public:
         clCreateCommandQueue_type   clCreateCommandQueue_original;
         clBuildProgram_type         clBuildProgram_original;
         clCreateKernel_type         clCreateKernel_original;
+        clSetKernelArg_type         clSetKernelArg_original;
+        clCreateBuffer_type         clCreateBuffer_original;
         clEnqueueNDRangeKernel_type clEnqueueNDRangeKernel_original;
         clEnqueueReadBuffer_type    clEnqueueReadBuffer_original;
         clEnqueueWriteBuffer_type   clEnqueueWriteBuffer_original;

@@ -1,3 +1,7 @@
+#
+# 2015-2016 (c) dividiti
+#
+
 import re
 
 #

@@ -1,5 +1,5 @@
 //
-// 2015 (c) dividiti
+// 2015-2016 (c) dividiti
 //
 
 
@@ -58,6 +58,7 @@ output_profiling_info(const char * call, cl_event * prof_event)
 // - clCreateCommandQueue()
 // - clBuildProgram()
 // - clCreateKernel()
+// - clCreateBuffer()
 // - clEnqueueNDRangeKernel()
 // - clEnqueueReadBuffer()
 // - clEnqueueWriteBuffer()
@@ -198,6 +199,33 @@ clCreateKernel(
     std::cout << prof.prefix << prof.sep << call << prof.sep << "kernel" << prof.sep << FIXED_WIDTH_PTR(kernel) << prof.lf << prof.lf;
 
     return kernel;
+}
+
+
+// https://www.khronos.org/registry/cl/sdk/1.2/docs/man/xhtml/clCreateBuffer.html
+extern CL_API_ENTRY cl_mem CL_API_CALL
+clCreateBuffer(
+    cl_context context,
+    cl_mem_flags flags,
+    size_t size,
+    void *host_ptr,
+    cl_int *errcode_ret) CL_API_SUFFIX__VERSION_1_0
+{
+    // Return value.
+    cl_mem buffer = NULL;
+
+    // API call.
+    const char * call = "clCreateBuffer";
+    std::cout << prof.prefix << prof.sep << call << prof.lf;
+
+    if (NULL == prof.interceptor.clCreateBuffer_original)
+    {
+        prof.interceptor.clCreateBuffer_original = (dvdt::Prof::Interceptor::clCreateBuffer_type) dlsym(RTLD_NEXT, call);
+    }
+
+    // TODO
+
+    return buffer;
 }
 
 

@@ -1,4 +1,4 @@
-# Copyright (c) 2015 dividiti Limited
+# 2015-2016 (c) dividiti
 
 # Add an interceptor library that intercepts some calls in 'libOpenCL.so'.
 add_library(prof_test SHARED ${SOURCE})
