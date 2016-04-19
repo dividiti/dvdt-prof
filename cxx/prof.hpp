@@ -69,8 +69,8 @@ public:
         typedef cl_int (*clSetKernelArg_type)\
             (cl_kernel, cl_uint, size_t, const void *);
 
-        typedef cl_mem (clCreateBuffer_type)\
-            (cl_mem_flags, size_t, void *, cl_int *);
+        typedef cl_mem (*clCreateBuffer_type)\
+            (cl_context, cl_mem_flags, size_t, void *, cl_int *);
 
         typedef cl_int (*clEnqueueNDRangeKernel_type)\
             (cl_command_queue, cl_kernel, cl_uint, const size_t *, const size_t *, const size_t *, cl_uint, const cl_event *, cl_event *);
@@ -82,14 +82,15 @@ public:
             (cl_command_queue, cl_mem, cl_bool, size_t, size_t, const void *, cl_uint, const cl_event *, cl_event *);
 
         // OpenCL API functions from the underlying vendor implementation.
-        clCreateCommandQueue_type   clCreateCommandQueue_original;
-        clBuildProgram_type         clBuildProgram_original;
-        clCreateKernel_type         clCreateKernel_original;
-        clSetKernelArg_type         clSetKernelArg_original;
-        clCreateBuffer_type         clCreateBuffer_original;
-        clEnqueueNDRangeKernel_type clEnqueueNDRangeKernel_original;
-        clEnqueueReadBuffer_type    clEnqueueReadBuffer_original;
-        clEnqueueWriteBuffer_type   clEnqueueWriteBuffer_original;
+        clCreateCommandQueue_type      clCreateCommandQueue_original;
+        clCreateProgramWithSource_type clCreateProgramWithSource_original;
+        clBuildProgram_type            clBuildProgram_original;
+        clCreateKernel_type            clCreateKernel_original;
+        clSetKernelArg_type            clSetKernelArg_original;
+        clCreateBuffer_type            clCreateBuffer_original;
+        clEnqueueNDRangeKernel_type    clEnqueueNDRangeKernel_original;
+        clEnqueueReadBuffer_type       clEnqueueReadBuffer_original;
+        clEnqueueWriteBuffer_type      clEnqueueWriteBuffer_original;
 
         // Mapping a kernel to a local work size tuple that will be used
         // to override the local work size specified in the program.
@@ -98,8 +99,11 @@ public:
         // Constructor.
         Interceptor() :
             clCreateCommandQueue_original(NULL),
+            clCreateProgramWithSource_original(NULL),
             clBuildProgram_original(NULL),
             clCreateKernel_original(NULL),
+            clSetKernelArg_original(NULL),
+            clCreateBuffer_original(NULL),
             clEnqueueNDRangeKernel_original(NULL),
             clEnqueueReadBuffer_original(NULL),
             clEnqueueWriteBuffer_original(NULL),

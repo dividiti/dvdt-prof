@@ -56,6 +56,7 @@ output_profiling_info(const char * call, cl_event * prof_event)
 // Table of contents.
 //
 // - clCreateCommandQueue()
+// - clCreateProgramWithSource()
 // - clBuildProgram()
 // - clCreateKernel()
 // - clCreateBuffer()
@@ -110,6 +111,76 @@ clCreateCommandQueue(
     std::cout << prof.prefix << prof.sep << call << prof.sep << "queue" << prof.sep << FIXED_WIDTH_PTR(queue) << prof.lf << prof.lf;
 
     return queue;
+}
+
+
+// https://www.khronos.org/registry/cl/sdk/1.2/docs/man/xhtml/clCreateProgramWithSource.html
+extern CL_API_ENTRY cl_program CL_API_CALL
+clCreateProgramWithSource(
+    cl_context context,
+    cl_uint count,
+    const char **strings,
+    const size_t *lengths,
+    cl_int *errcode_ret) CL_API_SUFFIX__VERSION_1_0
+{
+    // Return value.
+    cl_program program = (cl_program) 0x0;
+
+    // API call.
+    const char * call = "clCreateProgramWithSource";
+    std::cout << prof.prefix << prof.sep << call << prof.lf;
+
+    if (NULL == prof.interceptor.clCreateProgramWithSource_original)
+    {
+        prof.interceptor.clCreateProgramWithSource_original = (dvdt::Prof::Interceptor::clCreateProgramWithSource_type) dlsym(RTLD_NEXT, call);
+    }
+
+    if (NULL == prof.interceptor.context)
+    {
+        prof.interceptor.context = context;
+    }
+
+    // Arguments.
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "context"     << prof.sep << FIXED_WIDTH_PTR(context) << prof.lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "count"       << prof.sep << count << prof.lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "strings"     << prof.sep << FIXED_WIDTH_PTR(strings) << prof.lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "lengths"     << prof.sep << FIXED_WIDTH_PTR(lengths) << prof.lf;
+    for (cl_uint c = 0; c < count; ++c)
+    {
+        std::cout << prof.prefix << prof.sep << call << prof.sep << "strings[" << c << "] <<" << prof.lf;
+        if (NULL == lengths || 0 == lengths[c])
+        {
+            // Program string is null-terminated.
+            std::cout << strings[c];
+        }
+        else
+        {
+            // When program string it not null-terminated, only
+            // print lengths[c] characters from strings[c].
+            for (cl_uint k = 0; k < lengths[c]; ++ k)
+            {
+                std::cout << strings[c][k];
+            }
+        }
+        std::cout << std::endl;
+        std::cout << prof.prefix << prof.sep << call << prof.sep << "strings[" << c << "] >>" << prof.lf;
+    }
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "errcode_ret" << prof.sep << FIXED_WIDTH_PTR(errcode_ret) << prof.lf;
+
+#ifndef DVDT_PROF_TEST
+    dvdt::start_timestamp(call);
+
+    // Original call.
+    program = prof.interceptor.clCreateProgramWithSource_original(\
+        context, count, strings, lengths, errcode_ret);
+
+    dvdt::end_timestamp(call);
+#endif
+
+    // Return value.
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "program" << prof.sep << FIXED_WIDTH_PTR(program) << prof.lf << prof.lf;
+
+    return program;
 }
 
 
@@ -212,7 +283,7 @@ clCreateBuffer(
     cl_int *errcode_ret) CL_API_SUFFIX__VERSION_1_0
 {
     // Return value.
-    cl_mem buffer = NULL;
+    cl_mem buffer = (cl_mem) 0x0;
 
     // API call.
     const char * call = "clCreateBuffer";
@@ -223,7 +294,30 @@ clCreateBuffer(
         prof.interceptor.clCreateBuffer_original = (dvdt::Prof::Interceptor::clCreateBuffer_type) dlsym(RTLD_NEXT, call);
     }
 
-    // TODO
+    if (NULL == prof.interceptor.context)
+    {
+        prof.interceptor.context = context;
+    }
+
+    // Arguments.
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "context"     << prof.sep << FIXED_WIDTH_PTR(context) << prof.lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "flags"       << prof.sep << flags << prof.lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "size"        << prof.sep << size << prof.lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "host_ptr"    << prof.sep << FIXED_WIDTH_PTR(host_ptr) << prof.lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "errcode_ret" << prof.sep << FIXED_WIDTH_PTR(errcode_ret) << prof.lf;
+
+#ifndef DVDT_PROF_TEST
+    dvdt::start_timestamp(call);
+
+    // Original call.
+    buffer = prof.interceptor.clCreateBuffer_original(\
+        context, flags, size, host_ptr, errcode_ret);
+
+    dvdt::end_timestamp(call);
+#endif
+
+    // Return value.
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "buffer" << prof.sep << FIXED_WIDTH_PTR(buffer) << prof.lf << prof.lf;
 
     return buffer;
 }
