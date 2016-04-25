@@ -40,7 +40,7 @@ SET(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
         
 # Pass CMake settings to the source code via a header file.
 configure_file(
-  "${PROJECT_SOURCE_DIR}/cxx/prof_info.hpp.in"
+  "${PROJECT_SOURCE_DIR}/cpp/prof_info.hpp.in"
   "${PROJECT_BINARY_DIR}/include/prof_info.hpp"
 )
 
@@ -50,7 +50,7 @@ include_directories("${PROJECT_BINARY_DIR}/include")
 
 # Add source files.
 set(SOURCE
-  ${CMAKE_CURRENT_SOURCE_DIR}/cxx/prof.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/cpp/prof.cpp
 )
 
 # Add an interceptor library that intercepts some calls in 'libOpenCL.so'.
