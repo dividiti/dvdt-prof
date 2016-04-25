@@ -38,6 +38,29 @@ def match_clBuildProgram(output, result):
     return (output[return_match.end():], result)
 
 
+def match_clCreateBuffer(output, result):
+    call = 'clCreateBuffer'
+
+    # Arguments.
+    result['context'] = re.search('%s %s %s (?P<context>%s)' % \
+        (prefix, call, 'context', ptr_regex), output).group('context')
+    result['flags'] = re.search('%s %s %s (?P<flags>%s)'   % \
+        (prefix, call, 'flags', int_regex), output).group('flags')
+    result['size']  = int(re.search('%s %s %s (?P<size>%s)' % \
+        (prefix, call, 'size', int_regex), output).group('size'))
+    result['host_ptr'] = re.search('%s %s %s (?P<host_ptr>%s)' % \
+        (prefix, call, 'host_ptr', ptr_regex), output).group('host_ptr')
+    result['errcode_ret'] = re.search('%s %s %s (?P<errcode_ret>%s)' % \
+        (prefix, call, 'errcode_ret', ptr_regex), output).group('errcode_ret')
+
+    # Return value.
+    return_match = re.search('%s %s %s (?P<buffer>%s)' % \
+        (prefix, call, 'buffer', ptr_regex), output)
+    result['queue'] = return_match.group('buffer')
+
+    return (output[return_match.end():], result)
+
+
 def match_clCreateCommandQueue(output, result):
     call = 'clCreateCommandQueue'
 
@@ -166,9 +189,11 @@ def match_clEnqueueReadBuffer(output, result):
 def match_clEnqueueWriteBuffer(output, result):
     return _match_clEnqueueReadOrWriteBuffer(call='clEnqueueWriteBuffer', output=output, result=result)
 
+
 # Map from API calls to parsers.
 map_call_to_parser = {
     'clBuildProgram'         : match_clBuildProgram,
+    'clCreateBuffer'         : match_clCreateBuffer,
     'clCreateCommandQueue'   : match_clCreateCommandQueue,
     'clCreateKernel'         : match_clCreateKernel,
     'clEnqueueNDRangeKernel' : match_clEnqueueNDRangeKernel,

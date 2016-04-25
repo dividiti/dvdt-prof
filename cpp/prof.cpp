@@ -53,7 +53,7 @@ output_profiling_info(const char * call, cl_event * prof_event)
 
 
 //
-// Table of contents.
+// Table of contents. (FIXME: make alphabetical?)
 //
 // - clCreateCommandQueue()
 // - clCreateProgramWithSource()
