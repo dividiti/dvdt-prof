@@ -101,6 +101,35 @@ def match_clCreateKernel(output, result):
     return (output[return_match.end():], result)
 
 
+def match_clCreateProgramWithSource(output, result):
+    call = 'clCreateProgramWithSource'
+
+    # Arguments.
+    result['context'] = re.search('%s %s %s (?P<context>%s)' % \
+        (prefix, call, 'context', ptr_regex), output).group('context')
+    result['count'] = int(re.search('%s %s %s (?P<count>%s)' % \
+        (prefix, call, 'count', int_regex), output).group('count'))
+    result['strings'] = re.search('%s %s %s (?P<strings>%s)' % \
+        (prefix, call, 'strings', ptr_regex), output).group('strings')
+    result['lengths'] = re.search('%s %s %s (?P<lengths>%s)' % \
+        (prefix, call, 'lengths', ptr_regex), output).group('lengths')
+    result['errcode_ret'] = re.search('%s %s %s (?P<errcode_ret>%s)' % \
+        (prefix, call, 'errcode_ret', ptr_regex), output).group('errcode_ret')
+
+    result['string'] = {}
+    for k in range(result['count']):
+        prefix_call_string_k = '%s %s %s' %  (prefix, call, 'strings\[%d\]' % k)
+        result['string'][k] = re.search('%s <<\n(?P<string>.*)\n%s >>\n' % \
+            (prefix_call_string_k, prefix_call_string_k), output, re.DOTALL).group('string')
+
+    # Return value.
+    return_match = re.search('%s %s %s (?P<program>%s)' % \
+        (prefix, call, 'program', ptr_regex), output)
+    result['program'] = return_match.group('program')
+
+    return (output[return_match.end():], result)
+
+
 def match_clEnqueueNDRangeKernel(output, result):
     call = 'clEnqueueNDRangeKernel'
 
@@ -192,13 +221,14 @@ def match_clEnqueueWriteBuffer(output, result):
 
 # Map from API calls to parsers.
 map_call_to_parser = {
-    'clBuildProgram'         : match_clBuildProgram,
-    'clCreateBuffer'         : match_clCreateBuffer,
-    'clCreateCommandQueue'   : match_clCreateCommandQueue,
-    'clCreateKernel'         : match_clCreateKernel,
-    'clEnqueueNDRangeKernel' : match_clEnqueueNDRangeKernel,
-    'clEnqueueReadBuffer'    : match_clEnqueueReadBuffer,
-    'clEnqueueWriteBuffer'   : match_clEnqueueWriteBuffer
+    'clBuildProgram'            : match_clBuildProgram,
+    'clCreateBuffer'            : match_clCreateBuffer,
+    'clCreateCommandQueue'      : match_clCreateCommandQueue,
+    'clCreateKernel'            : match_clCreateKernel,
+    'clCreateProgramWithSource' : match_clCreateProgramWithSource,
+    'clEnqueueNDRangeKernel'    : match_clEnqueueNDRangeKernel,
+    'clEnqueueReadBuffer'       : match_clEnqueueReadBuffer,
+    'clEnqueueWriteBuffer'      : match_clEnqueueWriteBuffer
 }
 
 
