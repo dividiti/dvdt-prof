@@ -566,3 +566,55 @@ clEnqueueWriteBuffer(
 
     return errcode;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+// https://www.khronos.org/registry/cl/sdk/1.2/docs/man/xhtml/clSetKernelArg.html
+extern CL_API_ENTRY cl_int CL_API_CALL
+clSetKernelArg(
+    cl_kernel kernel,
+    cl_uint arg_index,
+    size_t arg_size,
+    const void *arg_value) CL_API_SUFFIX__VERSION_1_0
+{
+    // Return value.
+    cl_int errcode = CL_SUCCESS;
+
+    // API call.
+    const char * call = "clSetKernelArg";
+    std::cout << prof.prefix << prof.sep << call << prof.lf;
+
+    if (NULL == prof.interceptor.clSetKernelArg_original)
+    {
+        prof.interceptor.clSetKernelArg_original = (dvdt::Prof::Interceptor::clSetKernelArg_type) dlsym(RTLD_NEXT, call);
+    }
+
+    // Arguments.
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "kernel"  << prof.sep << FIXED_WIDTH_PTR(kernel) << prof.lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "arg_index" << prof.sep << arg_index << prof.lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "arg_size" << prof.sep << arg_size << prof.lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "arg_value" << prof.sep << FIXED_WIDTH_PTR(arg_value) << prof.lf;
+
+#ifndef DVDT_PROF_TEST
+    dvdt::start_timestamp(call);
+
+    // Original call.
+    errcode = prof.interceptor.clSetKernelArg_original(kernel, arg_index, arg_size, arg_value);
+
+    dvdt::end_timestamp(call);
+#endif
+
+    // Return value.
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "errcode" << prof.sep << errcode << prof.lf << prof.lf;
+
+    return errcode;
+}

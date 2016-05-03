@@ -219,6 +219,27 @@ def match_clEnqueueWriteBuffer(output, result):
     return _match_clEnqueueReadOrWriteBuffer(call='clEnqueueWriteBuffer', output=output, result=result)
 
 
+def match_clSetKernelArg(output, result):
+    call = 'clSetKernelArg'
+
+    # Arguments.
+    result['kernel'] = re.search('%s %s %s (?P<kernel>%s)' % \
+        (prefix, call, 'kernel', ptr_regex), output).group('kernel')
+    result['arg_index'] = int(re.search('%s %s %s (?P<arg_index>%s)' % \
+        (prefix, call, 'arg_index', int_regex), output).group('arg_index'))
+    result['arg_size'] = int(re.search('%s %s %s (?P<arg_size>%s)' % \
+        (prefix, call, 'arg_size',  int_regex), output).group('arg_size'))
+    result['arg_value'] = re.search('%s %s %s (?P<arg_value>%s)' % \
+        (prefix, call, 'arg_value', ptr_regex), output).group('arg_value')
+
+    # Return value.
+    return_match = re.search('%s %s %s (?P<errcode>%s)' % \
+        (prefix, call, 'errcode', int_regex), output)
+    result['errcode'] = int(return_match.group('errcode'))
+
+    return (output[return_match.end():], result)
+
+
 # Map from API calls to parsers.
 map_call_to_parser = {
     'clBuildProgram'            : match_clBuildProgram,
@@ -228,7 +249,8 @@ map_call_to_parser = {
     'clCreateProgramWithSource' : match_clCreateProgramWithSource,
     'clEnqueueNDRangeKernel'    : match_clEnqueueNDRangeKernel,
     'clEnqueueReadBuffer'       : match_clEnqueueReadBuffer,
-    'clEnqueueWriteBuffer'      : match_clEnqueueWriteBuffer
+    'clEnqueueWriteBuffer'      : match_clEnqueueWriteBuffer,
+    'clSetKernelArg'            : match_clSetKernelArg
 }
 
 
