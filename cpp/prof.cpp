@@ -48,22 +48,119 @@ output_profiling_info(const char * call, cl_event * prof_event)
         prof.sep << queued << prof.sep << submit << prof.sep << start << prof.sep << end << prof.lf;
 }
 
-
 } // namespace dvdt
 
 
 //
-// Table of contents. (FIXME: make alphabetical?)
+// Table of contents: OpenCL API functions in alphabetical order.
 //
-// - clCreateCommandQueue()
-// - clCreateProgramWithSource()
 // - clBuildProgram()
-// - clCreateKernel()
 // - clCreateBuffer()
+// - clCreateCommandQueue()
+// - clCreateKernel()
+// - clCreateProgramWithSource()
 // - clEnqueueNDRangeKernel()
 // - clEnqueueReadBuffer()
 // - clEnqueueWriteBuffer()
+// - clSetKernelArg()
 //
+
+// https://www.khronos.org/registry/cl/sdk/1.2/docs/man/xhtml/clBuildProgram.html
+extern CL_API_ENTRY cl_int CL_API_CALL
+clBuildProgram(
+    cl_program program,
+    cl_uint num_devices,
+    const cl_device_id * device_list,
+    const char * options,
+    void (CL_CALLBACK * pfn_notify)(cl_program program, void * user_data),
+    void * user_data) CL_API_SUFFIX__VERSION_1_0
+{
+    // Return value.
+    cl_int errcode = CL_SUCCESS;
+
+    // API call.
+    const char * call = "clBuildProgram";
+    std::cout << prof.prefix << prof.sep << call << prof.lf;
+
+    if (NULL == prof.interceptor.clBuildProgram_original)
+    {
+        prof.interceptor.clBuildProgram_original = (dvdt::Prof::Interceptor::clBuildProgram_type) dlsym(RTLD_NEXT, call);
+    }
+
+    // Arguments.
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "program" << prof.sep << FIXED_WIDTH_PTR(program) << prof.lf;
+    // TODO: num_devices.
+    // TODO: device_list.
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "options" << prof.sep << (options ? options : "") << prof.lf;
+    // TODO: pfn_notify.
+    // TODO: user_data.
+
+#ifndef DVDT_PROF_TEST
+    dvdt::start_timestamp(call);
+
+    // Original call.
+    errcode = prof.interceptor.clBuildProgram_original(\
+        program, num_devices, device_list, options, pfn_notify, user_data);
+    // TODO: Make the call blocking so (end - start) represents the actual program build time.
+
+    dvdt::end_timestamp(call);
+#endif
+
+    // Return value.
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "errcode" << prof.sep << errcode << prof.lf << prof.lf;
+
+    return errcode;
+}
+
+
+// https://www.khronos.org/registry/cl/sdk/1.2/docs/man/xhtml/clCreateBuffer.html
+extern CL_API_ENTRY cl_mem CL_API_CALL
+clCreateBuffer(
+    cl_context context,
+    cl_mem_flags flags,
+    size_t size,
+    void *host_ptr,
+    cl_int *errcode_ret) CL_API_SUFFIX__VERSION_1_0
+{
+    // Return value.
+    cl_mem buffer = (cl_mem) 0x0;
+
+    // API call.
+    const char * call = "clCreateBuffer";
+    std::cout << prof.prefix << prof.sep << call << prof.lf;
+
+    if (NULL == prof.interceptor.clCreateBuffer_original)
+    {
+        prof.interceptor.clCreateBuffer_original = (dvdt::Prof::Interceptor::clCreateBuffer_type) dlsym(RTLD_NEXT, call);
+    }
+
+    if (NULL == prof.interceptor.context)
+    {
+        prof.interceptor.context = context;
+    }
+
+    // Arguments.
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "context"     << prof.sep << FIXED_WIDTH_PTR(context) << prof.lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "flags"       << prof.sep << flags << prof.lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "size"        << prof.sep << size << prof.lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "host_ptr"    << prof.sep << FIXED_WIDTH_PTR(host_ptr) << prof.lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "errcode_ret" << prof.sep << FIXED_WIDTH_PTR(errcode_ret) << prof.lf;
+
+#ifndef DVDT_PROF_TEST
+    dvdt::start_timestamp(call);
+
+    // Original call.
+    buffer = prof.interceptor.clCreateBuffer_original(\
+        context, flags, size, host_ptr, errcode_ret);
+
+    dvdt::end_timestamp(call);
+#endif
+
+    // Return value.
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "buffer" << prof.sep << FIXED_WIDTH_PTR(buffer) << prof.lf << prof.lf;
+
+    return buffer;
+}
 
 
 // https://www.khronos.org/registry/cl/sdk/1.2/docs/man/xhtml/clCreateCommandQueue.html
@@ -111,6 +208,47 @@ clCreateCommandQueue(
     std::cout << prof.prefix << prof.sep << call << prof.sep << "queue" << prof.sep << FIXED_WIDTH_PTR(queue) << prof.lf << prof.lf;
 
     return queue;
+}
+
+
+// https://www.khronos.org/registry/cl/sdk/1.2/docs/man/xhtml/clCreateKernel.html
+extern CL_API_ENTRY cl_kernel CL_API_CALL
+clCreateKernel(
+    cl_program program,
+    const char * kernel_name,
+    cl_int * errcode_ret) CL_API_SUFFIX__VERSION_1_0
+{
+    // Return value.
+    cl_kernel kernel = (cl_kernel) 0x0;
+
+    // API call.
+    const char * call = "clCreateKernel";
+    std::cout << prof.prefix << prof.sep << call << prof.lf;
+
+    if (NULL == prof.interceptor.clCreateKernel_original)
+    {
+        prof.interceptor.clCreateKernel_original = (dvdt::Prof::Interceptor::clCreateKernel_type) dlsym(RTLD_NEXT, call);
+    }
+
+    // Arguments.
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "program" << prof.sep << FIXED_WIDTH_PTR(program) << prof.lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "name" << prof.sep << kernel_name << prof.lf;
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "errcode_ret" << prof.sep << FIXED_WIDTH_PTR(errcode_ret) << prof.lf;
+
+#ifndef DVDT_PROF_TEST
+    dvdt::start_timestamp(call);
+
+    // Original call.
+    kernel = prof.interceptor.clCreateKernel_original(
+        program, kernel_name, errcode_ret);
+
+    dvdt::end_timestamp(call);
+#endif
+
+    // Return value.
+    std::cout << prof.prefix << prof.sep << call << prof.sep << "kernel" << prof.sep << FIXED_WIDTH_PTR(kernel) << prof.lf << prof.lf;
+
+    return kernel;
 }
 
 
@@ -181,145 +319,6 @@ clCreateProgramWithSource(
     std::cout << prof.prefix << prof.sep << call << prof.sep << "program" << prof.sep << FIXED_WIDTH_PTR(program) << prof.lf << prof.lf;
 
     return program;
-}
-
-
-// https://www.khronos.org/registry/cl/sdk/1.2/docs/man/xhtml/clBuildProgram.html
-extern CL_API_ENTRY cl_int CL_API_CALL
-clBuildProgram(
-    cl_program program,
-    cl_uint num_devices,
-    const cl_device_id * device_list,
-    const char * options,
-    void (CL_CALLBACK * pfn_notify)(cl_program program, void * user_data),
-    void * user_data) CL_API_SUFFIX__VERSION_1_0
-{
-    // Return value.
-    cl_int errcode = CL_SUCCESS;
-
-    // API call.
-    const char * call = "clBuildProgram";
-    std::cout << prof.prefix << prof.sep << call << prof.lf;
-
-    if (NULL == prof.interceptor.clBuildProgram_original)
-    {
-        prof.interceptor.clBuildProgram_original = (dvdt::Prof::Interceptor::clBuildProgram_type) dlsym(RTLD_NEXT, call);
-    }
-
-    // Arguments.
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "program" << prof.sep << FIXED_WIDTH_PTR(program) << prof.lf;
-    // TODO: num_devices.
-    // TODO: device_list.
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "options" << prof.sep << (options ? options : "") << prof.lf;
-    // TODO: pfn_notify.
-    // TODO: user_data.
-
-#ifndef DVDT_PROF_TEST
-    dvdt::start_timestamp(call);
-
-    // Original call.
-    errcode = prof.interceptor.clBuildProgram_original(\
-        program, num_devices, device_list, options, pfn_notify, user_data);
-    // TODO: Make the call blocking so (end - start) represents the actual program build time.
-
-    dvdt::end_timestamp(call);
-#endif
-
-    // Return value.
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "errcode" << prof.sep << errcode << prof.lf << prof.lf;
-
-    return errcode;
-}
-
-
-// https://www.khronos.org/registry/cl/sdk/1.2/docs/man/xhtml/clCreateKernel.html
-extern CL_API_ENTRY cl_kernel CL_API_CALL
-clCreateKernel(
-    cl_program program,
-    const char * kernel_name,
-    cl_int * errcode_ret) CL_API_SUFFIX__VERSION_1_0
-{
-    // Return value.
-    cl_kernel kernel = (cl_kernel) 0x0;
-
-    // API call.
-    const char * call = "clCreateKernel";
-    std::cout << prof.prefix << prof.sep << call << prof.lf;
-
-    if (NULL == prof.interceptor.clCreateKernel_original)
-    {
-        prof.interceptor.clCreateKernel_original = (dvdt::Prof::Interceptor::clCreateKernel_type) dlsym(RTLD_NEXT, call);
-    }
-
-    // Arguments.
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "program" << prof.sep << FIXED_WIDTH_PTR(program) << prof.lf;
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "name" << prof.sep << kernel_name << prof.lf;
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "errcode_ret" << prof.sep << FIXED_WIDTH_PTR(errcode_ret) << prof.lf;
-
-#ifndef DVDT_PROF_TEST
-    dvdt::start_timestamp(call);
-
-    // Original call.
-    kernel = prof.interceptor.clCreateKernel_original(
-        program, kernel_name, errcode_ret);
-
-    dvdt::end_timestamp(call);
-#endif
-
-    // Return value.
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "kernel" << prof.sep << FIXED_WIDTH_PTR(kernel) << prof.lf << prof.lf;
-
-    return kernel;
-}
-
-
-// https://www.khronos.org/registry/cl/sdk/1.2/docs/man/xhtml/clCreateBuffer.html
-extern CL_API_ENTRY cl_mem CL_API_CALL
-clCreateBuffer(
-    cl_context context,
-    cl_mem_flags flags,
-    size_t size,
-    void *host_ptr,
-    cl_int *errcode_ret) CL_API_SUFFIX__VERSION_1_0
-{
-    // Return value.
-    cl_mem buffer = (cl_mem) 0x0;
-
-    // API call.
-    const char * call = "clCreateBuffer";
-    std::cout << prof.prefix << prof.sep << call << prof.lf;
-
-    if (NULL == prof.interceptor.clCreateBuffer_original)
-    {
-        prof.interceptor.clCreateBuffer_original = (dvdt::Prof::Interceptor::clCreateBuffer_type) dlsym(RTLD_NEXT, call);
-    }
-
-    if (NULL == prof.interceptor.context)
-    {
-        prof.interceptor.context = context;
-    }
-
-    // Arguments.
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "context"     << prof.sep << FIXED_WIDTH_PTR(context) << prof.lf;
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "flags"       << prof.sep << flags << prof.lf;
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "size"        << prof.sep << size << prof.lf;
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "host_ptr"    << prof.sep << FIXED_WIDTH_PTR(host_ptr) << prof.lf;
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "errcode_ret" << prof.sep << FIXED_WIDTH_PTR(errcode_ret) << prof.lf;
-
-#ifndef DVDT_PROF_TEST
-    dvdt::start_timestamp(call);
-
-    // Original call.
-    buffer = prof.interceptor.clCreateBuffer_original(\
-        context, flags, size, host_ptr, errcode_ret);
-
-    dvdt::end_timestamp(call);
-#endif
-
-    // Return value.
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "buffer" << prof.sep << FIXED_WIDTH_PTR(buffer) << prof.lf << prof.lf;
-
-    return buffer;
 }
 
 

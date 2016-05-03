@@ -54,23 +54,20 @@ public:
     {
     public:
         // Types of OpenCL API functions.
-        typedef cl_command_queue (*clCreateCommandQueue_type)\
-            (cl_context, cl_device_id, cl_command_queue_properties, cl_int *errcode_ret);
-
-        typedef cl_program (*clCreateProgramWithSource_type)\
-            (cl_context, cl_uint count, const char ** strings, const size_t * lengths, cl_int * errcode_ret);
-
         typedef cl_int (*clBuildProgram_type)\
             (cl_program, cl_uint, const cl_device_id *, const char *, void (CL_CALLBACK *)(cl_program, void *), void *);
+
+        typedef cl_mem (*clCreateBuffer_type)\
+            (cl_context, cl_mem_flags, size_t, void *, cl_int *);
+
+        typedef cl_command_queue (*clCreateCommandQueue_type)\
+            (cl_context, cl_device_id, cl_command_queue_properties, cl_int *errcode_ret);
 
         typedef cl_kernel (*clCreateKernel_type)\
             (cl_program, const char * givenKernelName, cl_int * errcode_ret);
 
-        typedef cl_int (*clSetKernelArg_type)\
-            (cl_kernel, cl_uint, size_t, const void *);
-
-        typedef cl_mem (*clCreateBuffer_type)\
-            (cl_context, cl_mem_flags, size_t, void *, cl_int *);
+        typedef cl_program (*clCreateProgramWithSource_type)\
+            (cl_context, cl_uint count, const char ** strings, const size_t * lengths, cl_int * errcode_ret);
 
         typedef cl_int (*clEnqueueNDRangeKernel_type)\
             (cl_command_queue, cl_kernel, cl_uint, const size_t *, const size_t *, const size_t *, cl_uint, const cl_event *, cl_event *);
@@ -81,16 +78,19 @@ public:
         typedef cl_int (*clEnqueueWriteBuffer_type)\
             (cl_command_queue, cl_mem, cl_bool, size_t, size_t, const void *, cl_uint, const cl_event *, cl_event *);
 
+        typedef cl_int (*clSetKernelArg_type)\
+            (cl_kernel, cl_uint, size_t, const void *);
+
         // OpenCL API functions from the underlying vendor implementation.
-        clCreateCommandQueue_type      clCreateCommandQueue_original;
-        clCreateProgramWithSource_type clCreateProgramWithSource_original;
         clBuildProgram_type            clBuildProgram_original;
-        clCreateKernel_type            clCreateKernel_original;
-        clSetKernelArg_type            clSetKernelArg_original;
         clCreateBuffer_type            clCreateBuffer_original;
+        clCreateCommandQueue_type      clCreateCommandQueue_original;
+        clCreateKernel_type            clCreateKernel_original;
+        clCreateProgramWithSource_type clCreateProgramWithSource_original;
         clEnqueueNDRangeKernel_type    clEnqueueNDRangeKernel_original;
         clEnqueueReadBuffer_type       clEnqueueReadBuffer_original;
         clEnqueueWriteBuffer_type      clEnqueueWriteBuffer_original;
+        clSetKernelArg_type            clSetKernelArg_original;
 
         // Mapping a kernel to a local work size tuple that will be used
         // to override the local work size specified in the program.
@@ -98,15 +98,15 @@ public:
 
         // Constructor.
         Interceptor() :
-            clCreateCommandQueue_original(NULL),
-            clCreateProgramWithSource_original(NULL),
             clBuildProgram_original(NULL),
-            clCreateKernel_original(NULL),
-            clSetKernelArg_original(NULL),
             clCreateBuffer_original(NULL),
+            clCreateCommandQueue_original(NULL),
+            clCreateKernel_original(NULL),
+            clCreateProgramWithSource_original(NULL),
             clEnqueueNDRangeKernel_original(NULL),
             clEnqueueReadBuffer_original(NULL),
             clEnqueueWriteBuffer_original(NULL),
+            clSetKernelArg_original(NULL),
             kernel_lws_null(false),
             context(NULL)
         {
