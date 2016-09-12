@@ -1,13 +1,12 @@
 #
-# Converting raw slambench timing to CK universal 
-# autotuning and machine learning format
-#
-# Collective Knowledge (CK)
+# Converting output from dividiti's OpenCL profiler to CK format.
 #
 # See CK LICENSE.txt for licensing details.
-# See CK Copyright.txt for copyright details.
+# See CK COPYRIGHT.txt for copyright details.
 #
-# Developer: Grigori Fursin
+# Developer:
+# - Grigori Fursin, 2015
+# - Anton Lokhmotov, 2016
 #
 
 import json
@@ -15,7 +14,7 @@ import sys
 
 d={}
 
-print ('Parsing dvdt opencl profiler output ...')
+print ('Parsing output of dividiti\'s OpenCL profiler ...')
 
 i=sys.argv
 
