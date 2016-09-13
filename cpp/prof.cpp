@@ -5,14 +5,14 @@
 
 #include "prof.hpp"
 
-// Static container for profiler's logger.
-static dvdt::Prof::Logger logger("[dv/dt]");
-
 // Static container for profiler's methods and data.
-static dvdt::Prof prof(logger);
+static dvdt::Prof prof;
+
+// Static container for profiler's logger.
+static dvdt::iostreamLogger logger("[dv/dt]");
 
 //
-// Table of contents: OpenCL API functions in alphabetical order.
+// Table of contents: OpenCL API functions in the alphabetical order.
 //
 // - clBuildProgram()
 // - clCreateBuffer()
