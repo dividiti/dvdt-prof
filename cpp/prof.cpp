@@ -5,51 +5,11 @@
 
 #include "prof.hpp"
 
-// Static container for profiler methods and data.
-static dvdt::Prof prof("[dv/dt]");
+// Static container for profiler's logger.
+static dvdt::Prof::Logger logger("[dv/dt]");
 
-namespace dvdt {
-
-// Wall-clock timestamps.
-static void print_timestamp(const char * call_cstr, const char * kind_cstr)
-{
-#if   (1 == DVDT_PROF_WALLCLOCK_BOOST)
-    const boost::posix_time::ptime time = boost::posix_time::microsec_clock::universal_time();
-    const std::string time_str = boost::posix_time::to_iso_extended_string(time);
-#elif (1 == DVDT_PROF_WALLCLOCK_TIMEOFDAY)
-    const std::string time_str("1970-01-01 00:00:00.000");
-#endif
-    std::cout << prof.prefix << prof.sep << call_cstr << prof.sep << kind_cstr << prof.sep << time_str << prof.lf;
-}
-
-static void start_timestamp(const char * call) { print_timestamp(call, "start"); }
-static void end_timestamp(const char * call)   { print_timestamp(call, "end"); }
-
-//
-// Internal profiling support.
-//
-void
-output_profiling_info(const char * call, cl_event * prof_event)
-{
-    cl_ulong queued, submit, start, end;
-
-    cl_int prof_errcode = CL_SUCCESS;
-    prof_errcode |= clWaitForEvents(1, prof_event);
-    prof_errcode |= clGetEventProfilingInfo(*prof_event, CL_PROFILING_COMMAND_QUEUED, sizeof(cl_ulong), &queued, NULL);
-    prof_errcode |= clGetEventProfilingInfo(*prof_event, CL_PROFILING_COMMAND_SUBMIT, sizeof(cl_ulong), &submit, NULL);
-    prof_errcode |= clGetEventProfilingInfo(*prof_event, CL_PROFILING_COMMAND_START,  sizeof(cl_ulong), &start,  NULL);
-    prof_errcode |= clGetEventProfilingInfo(*prof_event, CL_PROFILING_COMMAND_END,    sizeof(cl_ulong), &end,    NULL);
-    if (CL_SUCCESS != prof_errcode)
-    {
-        std::cout << prof.prefix << prof.sep << call << prof.sep << "output profiling info error: " << prof_errcode << prof.lf;
-    }
-
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "profiling" <<
-        prof.sep << queued << prof.sep << submit << prof.sep << start << prof.sep << end << prof.lf;
-}
-
-} // namespace dvdt
-
+// Static container for profiler's methods and data.
+static dvdt::Prof prof(logger);
 
 //
 // Table of contents: OpenCL API functions in alphabetical order.
@@ -80,7 +40,7 @@ clBuildProgram(
 
     // API call.
     const char * call = "clBuildProgram";
-    std::cout << prof.prefix << prof.sep << call << prof.lf;
+    logger.log_call(call);
 
     if (NULL == prof.interceptor.clBuildProgram_original)
     {
@@ -88,29 +48,30 @@ clBuildProgram(
     }
 
     // Arguments.
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "program" << prof.sep << FIXED_WIDTH_PTR(program) << prof.lf;
+    logger.log_ptr(call, "program", program);
     // TODO: num_devices.
     // TODO: device_list.
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "options" << prof.sep << (options ? options : "") << prof.lf;
+    logger.log_str(call, "options", options ? options : "");
     // TODO: pfn_notify.
     // TODO: user_data.
 
 #ifndef DVDT_PROF_TEST
-    dvdt::start_timestamp(call);
+    logger.log_timestamp_start(call);
 
     // Original call.
     errcode = prof.interceptor.clBuildProgram_original(\
         program, num_devices, device_list, options, pfn_notify, user_data);
     // TODO: Make the call blocking so (end - start) represents the actual program build time.
 
-    dvdt::end_timestamp(call);
+    logger.log_timestamp_end(call);
 #endif
 
     // Return value.
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "errcode" << prof.sep << errcode << prof.lf << prof.lf;
+    logger.log_num<cl_int>(call, "errcode", errcode); logger.log_lf();
 
     return errcode;
-}
+
+} // clBuildProgram()
 
 
 // https://www.khronos.org/registry/cl/sdk/1.2/docs/man/xhtml/clCreateBuffer.html
@@ -127,7 +88,7 @@ clCreateBuffer(
 
     // API call.
     const char * call = "clCreateBuffer";
-    std::cout << prof.prefix << prof.sep << call << prof.lf;
+    logger.log_call(call);
 
     if (NULL == prof.interceptor.clCreateBuffer_original)
     {
@@ -140,27 +101,28 @@ clCreateBuffer(
     }
 
     // Arguments.
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "context"     << prof.sep << FIXED_WIDTH_PTR(context) << prof.lf;
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "flags"       << prof.sep << flags << prof.lf;
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "size"        << prof.sep << size << prof.lf;
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "host_ptr"    << prof.sep << FIXED_WIDTH_PTR(host_ptr) << prof.lf;
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "errcode_ret" << prof.sep << FIXED_WIDTH_PTR(errcode_ret) << prof.lf;
+    logger.log_ptr(call, "context", context);
+    logger.log_num<cl_mem_flags>(call, "flags", flags);
+    logger.log_num<size_t>(call, "size", size);
+    logger.log_ptr(call, "host_ptr", host_ptr);
+    logger.log_ptr(call, "errcode_ret", errcode_ret);
 
 #ifndef DVDT_PROF_TEST
-    dvdt::start_timestamp(call);
+    logger.log_timestamp_start(call);
 
     // Original call.
     buffer = prof.interceptor.clCreateBuffer_original(\
         context, flags, size, host_ptr, errcode_ret);
 
-    dvdt::end_timestamp(call);
+    logger.log_timestamp_end(call);
 #endif
 
     // Return value.
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "buffer" << prof.sep << FIXED_WIDTH_PTR(buffer) << prof.lf << prof.lf;
+    logger.log_ptr(call, "buffer", buffer); logger.log_lf();
 
     return buffer;
-}
+
+} // clCreateBuffer()
 
 
 // https://www.khronos.org/registry/cl/sdk/1.2/docs/man/xhtml/clCreateCommandQueue.html
@@ -176,7 +138,7 @@ clCreateCommandQueue(
 
     // API call.
     const char * call = "clCreateCommandQueue";
-    std::cout << prof.prefix << prof.sep << call << prof.lf;
+    logger.log_call(call);
 
     if (NULL == prof.interceptor.clCreateCommandQueue_original)
     {
@@ -189,26 +151,27 @@ clCreateCommandQueue(
     }
 
     // Arguments.
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "context"     << prof.sep << FIXED_WIDTH_PTR(context) << prof.lf;
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "device"      << prof.sep << FIXED_WIDTH_PTR(device) << prof.lf;
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "properties"  << prof.sep << properties << prof.lf;
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "errcode_ret" << prof.sep << FIXED_WIDTH_PTR(errcode_ret) << prof.lf;
+    logger.log_ptr(call, "context", context);
+    logger.log_ptr(call, "device", device);
+    logger.log_num<cl_command_queue_properties>(call, "properties", properties);
+    logger.log_ptr(call, "errcode_ret", errcode_ret);
 
 #ifndef DVDT_PROF_TEST
-    dvdt::start_timestamp(call);
+    logger.log_timestamp_start(call);
 
     // Original call.
     queue = prof.interceptor.clCreateCommandQueue_original(\
         context, device, properties | CL_QUEUE_PROFILING_ENABLE, errcode_ret);
 
-    dvdt::end_timestamp(call);
+    logger.log_timestamp_end(call);
 #endif
 
     // Return value.
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "queue" << prof.sep << FIXED_WIDTH_PTR(queue) << prof.lf << prof.lf;
+    logger.log_ptr(call, "queue", queue); logger.log_lf();
 
     return queue;
-}
+
+} // clCreateCommandQueue()
 
 
 // https://www.khronos.org/registry/cl/sdk/1.2/docs/man/xhtml/clCreateKernel.html
@@ -223,7 +186,7 @@ clCreateKernel(
 
     // API call.
     const char * call = "clCreateKernel";
-    std::cout << prof.prefix << prof.sep << call << prof.lf;
+    logger.log_call(call);
 
     if (NULL == prof.interceptor.clCreateKernel_original)
     {
@@ -231,25 +194,26 @@ clCreateKernel(
     }
 
     // Arguments.
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "program" << prof.sep << FIXED_WIDTH_PTR(program) << prof.lf;
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "name" << prof.sep << kernel_name << prof.lf;
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "errcode_ret" << prof.sep << FIXED_WIDTH_PTR(errcode_ret) << prof.lf;
+    logger.log_ptr(call, "program", program);
+    logger.log_str(call, "name", kernel_name);
+    logger.log_ptr(call, "errcode_ret", errcode_ret);
 
 #ifndef DVDT_PROF_TEST
-    dvdt::start_timestamp(call);
+    logger.log_timestamp_start(call);
 
     // Original call.
     kernel = prof.interceptor.clCreateKernel_original(
         program, kernel_name, errcode_ret);
 
-    dvdt::end_timestamp(call);
+    logger.log_timestamp_end(call);
 #endif
 
     // Return value.
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "kernel" << prof.sep << FIXED_WIDTH_PTR(kernel) << prof.lf << prof.lf;
+    logger.log_ptr(call, "kernel", kernel); logger.log_lf();
 
     return kernel;
-}
+
+} // clCreateKernel()
 
 
 // https://www.khronos.org/registry/cl/sdk/1.2/docs/man/xhtml/clCreateProgramWithSource.html
@@ -266,7 +230,7 @@ clCreateProgramWithSource(
 
     // API call.
     const char * call = "clCreateProgramWithSource";
-    std::cout << prof.prefix << prof.sep << call << prof.lf;
+    logger.log_call(call);
 
     if (NULL == prof.interceptor.clCreateProgramWithSource_original)
     {
@@ -279,47 +243,29 @@ clCreateProgramWithSource(
     }
 
     // Arguments.
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "context"     << prof.sep << FIXED_WIDTH_PTR(context) << prof.lf;
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "count"       << prof.sep << count << prof.lf;
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "strings"     << prof.sep << FIXED_WIDTH_PTR(strings) << prof.lf;
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "lengths"     << prof.sep << FIXED_WIDTH_PTR(lengths) << prof.lf;
-    for (cl_uint c = 0; c < count; ++c)
-    {
-        std::cout << prof.prefix << prof.sep << call << prof.sep << "strings[" << c << "] <<" << prof.lf;
-        if (NULL == lengths || 0 == lengths[c])
-        {
-            // Program string is null-terminated.
-            std::cout << strings[c];
-        }
-        else
-        {
-            // When program string it not null-terminated, only
-            // print lengths[c] characters from strings[c].
-            for (cl_uint k = 0; k < lengths[c]; ++ k)
-            {
-                std::cout << strings[c][k];
-            }
-        }
-        std::cout << std::endl;
-        std::cout << prof.prefix << prof.sep << call << prof.sep << "strings[" << c << "] >>" << prof.lf;
-    }
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "errcode_ret" << prof.sep << FIXED_WIDTH_PTR(errcode_ret) << prof.lf;
+    logger.log_ptr(call, "context", context);
+    logger.log_num<cl_uint>(call, "count", count);
+    logger.log_ptr(call, "strings", strings);
+    logger.log_ptr(call, "lengths", lengths);
+    logger.log_src(call, count, strings, lengths);
+    logger.log_ptr(call, "errcode_ret", errcode_ret);
 
 #ifndef DVDT_PROF_TEST
-    dvdt::start_timestamp(call);
+    logger.log_timestamp_start(call);
 
     // Original call.
     program = prof.interceptor.clCreateProgramWithSource_original(\
         context, count, strings, lengths, errcode_ret);
 
-    dvdt::end_timestamp(call);
+    logger.log_timestamp_end(call);
 #endif
 
     // Return value.
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "program" << prof.sep << FIXED_WIDTH_PTR(program) << prof.lf << prof.lf;
+    logger.log_ptr(call, "program", program); logger.log_lf();
 
     return program;
-}
+
+} // clCreateProgramWithSource()
 
 
 // https://www.khronos.org/registry/cl/sdk/1.2/docs/man/xhtml/clEnqueueNDRangeKernel.html
@@ -340,7 +286,7 @@ clEnqueueNDRangeKernel(
 
     // API call.
     const char * call = "clEnqueueNDRangeKernel";
-    std::cout << prof.prefix << prof.sep << call << prof.lf;
+    logger.log_call(call);
 
     if (NULL == prof.interceptor.clEnqueueNDRangeKernel_original)
     {
@@ -361,60 +307,21 @@ clEnqueueNDRangeKernel(
 #else
     const char name[] = "dvdt_prof_kernel";
 #endif
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "name"  << prof.sep << name << prof.lf;
+    logger.log_str(call, "name", name);
 
     local_work_size = prof.interceptor.update_lws(name, local_work_size);
 
     // Arguments.
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "queue"  << prof.sep << FIXED_WIDTH_PTR(queue) << prof.lf;
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "kernel" << prof.sep << FIXED_WIDTH_PTR(kernel) << prof.lf;
-    // - global_work_offset
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "offset";
-    for (cl_uint d = 0; d < dvdt::Prof::max_work_dim; ++d)
-    {
-        if (global_work_offset)
-        {
-            std::cout << prof.sep << (d < work_dim ? global_work_offset[d] : dvdt::Prof::default_global_work_offset);
-        }
-        else
-        {
-            std::cout << prof.sep << dvdt::Prof::null_global_work_offset;
-        }
-    }
-    std::cout << prof.lf;
-    // - global_work_size
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "gws";
-    for (cl_uint d = 0; d < dvdt::Prof::max_work_dim; ++d)
-    {
-        std::cout << prof.sep << (d < work_dim ? global_work_size[d] : dvdt::Prof::default_global_work_size);
-    }
-    std::cout << prof.lf;
-    // - local_work_size
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "lws";
-    for (cl_uint d = 0; d < dvdt::Prof::max_work_dim; ++d)
-    {
-        if (local_work_size)
-        {
-            std::cout << prof.sep << (d < work_dim ? local_work_size[d] : dvdt::Prof::default_local_work_size);
-        }
-        else
-        {
-            std::cout << prof.sep << dvdt::Prof::null_local_work_size;
-        }
-    }
-    std::cout << prof.lf;
-    // - event_wait_list
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "event_wait_list";
-    for (cl_uint e = 0; e < num_events_in_wait_list; ++e)
-    {
-        std::cout << prof.sep << event_wait_list[e];
-    }
-    std::cout << prof.lf;
-    // - event
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "event" << prof.sep << FIXED_WIDTH_PTR(event) << prof.lf;
+    logger.log_ptr(call, "queue", queue);
+    logger.log_ptr(call, "kernel", kernel);
+    logger.log_gwo(call, work_dim, global_work_offset);
+    logger.log_gws(call, work_dim, global_work_size);
+    logger.log_lws(call, work_dim, local_work_size);
+    logger.log_list<cl_event>(call, "event_wait_list", event_wait_list, num_events_in_wait_list);
+    logger.log_ptr(call, "event", event);
 
 #ifndef DVDT_PROF_TEST
-    dvdt::start_timestamp(call);
+    logger.log_timestamp_start(call);
 
     // Event object needed if 'event' is NULL.
     cl_event prof_event_obj;
@@ -425,16 +332,17 @@ clEnqueueNDRangeKernel(
         queue, kernel, work_dim, global_work_offset, global_work_size, local_work_size,\
         num_events_in_wait_list, event_wait_list, prof_event);
 
-    dvdt::output_profiling_info(call, prof_event);
+    logger.log_profiling_info(call, prof_event);
 
-    dvdt::end_timestamp(call);
+    logger.log_timestamp_end(call);
 #endif
 
     // Return value.
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "errcode" << prof.sep << errcode << prof.lf << prof.lf;
+    logger.log_num<cl_int>(call, "errcode", errcode); logger.log_lf();
 
     return errcode;
-}
+
+} // clEnqueueNDRangeKernel()
 
 
 // https://www.khronos.org/registry/cl/sdk/1.2/docs/man/xhtml/clEnqueueReadBuffer.html
@@ -455,7 +363,7 @@ clEnqueueReadBuffer(
 
     // API call.
     const char * call = "clEnqueueReadBuffer";
-    std::cout << prof.prefix << prof.sep << call << prof.lf;
+    logger.log_call(call);
 
     if (NULL == prof.interceptor.clEnqueueReadBuffer_original)
     {
@@ -463,24 +371,19 @@ clEnqueueReadBuffer(
     }
 
     // Arguments.
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "queue"  << prof.sep << FIXED_WIDTH_PTR(queue) << prof.lf;
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "buffer" << prof.sep << FIXED_WIDTH_PTR(buffer) << prof.lf;
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "blocking" << prof.sep << blocking << prof.lf;
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "offset" << prof.sep << offset << prof.lf;
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "size" << prof.sep << size << prof.lf;
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "ptr" << prof.sep << FIXED_WIDTH_PTR(ptr) << prof.lf;
+    logger.log_ptr(call, "queue", queue);
+    logger.log_ptr(call, "buffer", buffer);
+    logger.log_num<cl_bool>(call, "blocking", blocking);
+    logger.log_num<size_t>(call, "offset", offset);
+    logger.log_num<size_t>(call, "size", size);
+    logger.log_ptr(call, "ptr", ptr);
     // - event_wait_list
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "event_wait_list";
-    for (cl_uint e = 0; e < num_events_in_wait_list; ++e)
-    {
-        std::cout << prof.sep << event_wait_list[e];
-    }
-    std::cout << prof.lf;
+    logger.log_list<cl_event>(call, "event_wait_list", event_wait_list, num_events_in_wait_list);
     // - event
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "event" << prof.sep << FIXED_WIDTH_PTR(event) << prof.lf;
+    logger.log_ptr(call, "event", event);
 
 #ifndef DVDT_PROF_TEST
-    dvdt::start_timestamp(call);
+    logger.log_timestamp_start(call);
 
     // Event object needed if 'event' is NULL.
     cl_event prof_event_obj;
@@ -490,16 +393,17 @@ clEnqueueReadBuffer(
     errcode = prof.interceptor.clEnqueueReadBuffer_original(queue, buffer, blocking, offset, size, ptr,
         num_events_in_wait_list, event_wait_list, prof_event);
 
-    dvdt::output_profiling_info(call, prof_event);
+    logger.log_profiling_info(call, prof_event);
 
-    dvdt::end_timestamp(call);
+    logger.log_timestamp_end(call);
 #endif
 
     // Return value.
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "errcode" << prof.sep << errcode << prof.lf << prof.lf;
+    logger.log_num<cl_int>(call, "errcode", errcode); logger.log_lf();
 
     return errcode;
-}
+
+} // clEnqueueReadBuffer()
 
 
 // https://www.khronos.org/registry/cl/sdk/1.2/docs/man/xhtml/clEnqueueWriteBuffer.html
@@ -520,7 +424,7 @@ clEnqueueWriteBuffer(
 
     // API call.
     const char * call = "clEnqueueWriteBuffer";
-    std::cout << prof.prefix << prof.sep << call << prof.lf;
+    logger.log_call(call);
 
     if (NULL == prof.interceptor.clEnqueueWriteBuffer_original)
     {
@@ -528,24 +432,17 @@ clEnqueueWriteBuffer(
     }
 
     // Arguments.
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "queue"  << prof.sep << FIXED_WIDTH_PTR(queue) << prof.lf;
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "buffer" << prof.sep << FIXED_WIDTH_PTR(buffer) << prof.lf;
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "blocking" << prof.sep << blocking << prof.lf;
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "offset" << prof.sep << offset << prof.lf;
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "size" << prof.sep << size << prof.lf;
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "ptr" << prof.sep << FIXED_WIDTH_PTR(ptr) << prof.lf;
-    // - event_wait_list
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "event_wait_list";
-    for (cl_uint e = 0; e < num_events_in_wait_list; ++e)
-    {
-        std::cout << prof.sep << event_wait_list[e];
-    }
-    std::cout << prof.lf;
-    // - event
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "event" << prof.sep << FIXED_WIDTH_PTR(event) << prof.lf;
+    logger.log_ptr(call, "queue", queue);
+    logger.log_ptr(call, "buffer", buffer);
+    logger.log_num<cl_bool>(call, "blocking", blocking);
+    logger.log_num<size_t>(call, "offset", offset);
+    logger.log_num<size_t>(call, "size", size);
+    logger.log_ptr(call, "ptr", ptr);
+    logger.log_list<cl_event>(call, "event_wait_list", event_wait_list, num_events_in_wait_list);
+    logger.log_ptr(call, "event", event);
 
 #ifndef DVDT_PROF_TEST
-    dvdt::start_timestamp(call);
+    logger.log_timestamp_start(call);
 
     // Event object needed if 'event' is NULL.
     cl_event prof_event_obj;
@@ -556,26 +453,17 @@ clEnqueueWriteBuffer(
         queue, buffer, blocking, offset, size, ptr,
         num_events_in_wait_list, event_wait_list, prof_event);
 
-    dvdt::output_profiling_info(call, prof_event);
+    logger.log_profiling_info(call, prof_event);
 
-    dvdt::end_timestamp(call);
+    logger.log_timestamp_end(call);
 #endif
 
     // Return value.
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "errcode" << prof.sep << errcode << prof.lf << prof.lf;
+    logger.log_num<cl_int>(call, "errcode", errcode); logger.log_lf();
 
     return errcode;
-}
 
-
-
-
-
-
-
-
-
-
+} // clEnqueueWriteBuffer()
 
 
 // https://www.khronos.org/registry/cl/sdk/1.2/docs/man/xhtml/clSetKernelArg.html
@@ -591,7 +479,7 @@ clSetKernelArg(
 
     // API call.
     const char * call = "clSetKernelArg";
-    std::cout << prof.prefix << prof.sep << call << prof.lf;
+    logger.log_call(call);
 
     if (NULL == prof.interceptor.clSetKernelArg_original)
     {
@@ -599,22 +487,23 @@ clSetKernelArg(
     }
 
     // Arguments.
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "kernel"  << prof.sep << FIXED_WIDTH_PTR(kernel) << prof.lf;
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "arg_index" << prof.sep << arg_index << prof.lf;
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "arg_size" << prof.sep << arg_size << prof.lf;
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "arg_value" << prof.sep << FIXED_WIDTH_PTR(arg_value) << prof.lf;
+    logger.log_ptr(call, "kernel", kernel);
+    logger.log_num<cl_uint>(call, "arg_index", arg_index);
+    logger.log_num<size_t>(call, "arg_size", arg_size);
+    logger.log_ptr(call, "arg_value", arg_value);
 
 #ifndef DVDT_PROF_TEST
-    dvdt::start_timestamp(call);
+    logger.log_timestamp_start(call);
 
     // Original call.
     errcode = prof.interceptor.clSetKernelArg_original(kernel, arg_index, arg_size, arg_value);
 
-    dvdt::end_timestamp(call);
+    logger.log_timestamp_end(call);
 #endif
 
     // Return value.
-    std::cout << prof.prefix << prof.sep << call << prof.sep << "errcode" << prof.sep << errcode << prof.lf << prof.lf;
+    logger.log_num<cl_int>(call, "errcode", errcode); logger.log_lf();
 
     return errcode;
-}
+
+} // clSetKernelArg()
