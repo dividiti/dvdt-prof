@@ -9,7 +9,7 @@
 static dvdt::Prof prof;
 
 // Static container for profiler's logger.
-static dvdt::iostreamLogger logger("[dv/dt]");
+static dvdt::ostreamLogger logger(std::cerr, "[dv/dt]");
 
 //
 // Table of contents: OpenCL API functions in the alphabetical order.
