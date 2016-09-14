@@ -44,6 +44,11 @@
 #endif
 
 
+#if (1 == DVDT_PROF_CJSON)
+#include <cJSON.h"
+#endif
+
+
 namespace dvdt
 {
 
