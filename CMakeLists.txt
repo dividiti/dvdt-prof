@@ -29,17 +29,17 @@ endif()
 
 # Set build options.
 set(CMAKE_CXX_FLAGS "-O2 -W -Wall")
-add_definitions("${TOOL_FLAGS}")
-include_directories("${CJSON_INCLUDE_DIR}")
 message(STATUS "Using compiler flags: ${CMAKE_CXX_FLAGS}")
 message(STATUS "Using linker flags: ${CMAKE_SHARED_LINKER_FLAGS}")
+message(STATUS "Using tool flags: ${TOOL_FLAGS}")
+add_definitions("${TOOL_FLAGS}")
 
 # Output directory for executables.
 SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 
 # Output directory for libraries.
 SET(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
-        
+
 # Pass CMake settings to the source code via a header file.
 configure_file(
   "${PROJECT_SOURCE_DIR}/cpp/prof_info.hpp.in"
@@ -49,6 +49,7 @@ configure_file(
 # Add the binary tree to the search path for include files
 # so that 'prof_info.hpp' can be found.
 include_directories("${PROJECT_BINARY_DIR}/include")
+include_directories("${CJSON_INCLUDE_DIR}")
 
 # Add source files.
 set(SOURCE
@@ -57,7 +58,7 @@ set(SOURCE
 
 # Add an interceptor library that intercepts some calls in 'libOpenCL.so'.
 add_library(prof SHARED ${SOURCE})
-target_link_libraries(prof dl)
+target_link_libraries(prof dl "${CJSON_LIB_DIR}/${CJSON_LIB_NAME}")
 
 # Test descriptions are in a separate file.
 include(CTest)

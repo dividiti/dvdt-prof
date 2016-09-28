@@ -425,13 +425,27 @@ private:
     const char sep;
     const char lf;
 
+    cJSON * calls;
+
 public:
     cjsonLogger(std::ostream & _stream=std::clog,
                   const char * _prefix="[cjson]",
                   const char _sep=' ',
                   const char _lf='\n') :
         stream(_stream), prefix(_prefix), sep(_sep), lf(_lf)
-    {}
+    {
+        calls = cJSON_CreateArray();
+    }
+
+    ~cjsonLogger()
+    {
+        char * result = cJSON_Print(calls);
+        stream << "cJSON result:" << std::endl;
+        stream << result << std::endl;
+        free(result);
+
+        cJSON_Delete(calls);
+    }
 
     inline void log_prefix() { stream << prefix; }
     inline void log_sep()    { stream << sep;    }
