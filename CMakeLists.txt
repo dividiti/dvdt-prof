@@ -29,6 +29,8 @@ endif()
 
 # Set build options.
 set(CMAKE_CXX_FLAGS "-O2 -W -Wall")
+add_definitions("${TOOL_FLAGS}")
+include_directories("${CJSON_INCLUDE_DIR}")
 message(STATUS "Using compiler flags: ${CMAKE_CXX_FLAGS}")
 message(STATUS "Using linker flags: ${CMAKE_SHARED_LINKER_FLAGS}")
 
