@@ -426,24 +426,34 @@ private:
     const char lf;
 
     cJSON * calls;
+    cJSON * call;
 
 public:
     cjsonLogger(std::ostream & _stream=std::clog,
                   const char * _prefix="[cjson]",
                   const char _sep=' ',
                   const char _lf='\n') :
-        stream(_stream), prefix(_prefix), sep(_sep), lf(_lf)
+        stream(_stream), prefix(_prefix), sep(_sep), lf(_lf),
+        calls(NULL), call(NULL)
     {
         calls = cJSON_CreateArray();
     }
 
     ~cjsonLogger()
     {
-        char * result = cJSON_Print(calls);
+        // Add last call object to calls array.
+        if (call)
+        {
+            cJSON_AddItemToArray(calls, call);
+        }
+        // Print calls array.
         stream << "cJSON result:" << std::endl;
-        stream << result << std::endl;
-        free(result);
-
+        {
+            char * result = cJSON_Print(calls);
+            stream << result << std::endl;
+            free(result);
+        }
+        // Free calls array.
         cJSON_Delete(calls);
     }
 
@@ -456,6 +466,14 @@ public:
     log_call(const char * call_name)
     {
         stream << prefix << sep << call_name << lf;
+        // Add previous call object to calls array.
+        if (call)
+        {
+            cJSON_AddItemToArray(calls, call);
+        }
+        // Create new call object.
+        call = cJSON_CreateObject();
+        cJSON_AddItemToObject(call, "call", cJSON_CreateString(call_name));
     } // log_call()
 
     inline void
