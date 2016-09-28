@@ -416,6 +416,182 @@ public:
 }; // class ostreamLogger : Logger
 
 
+class cjsonLogger : public Prof::Logger
+{
+private:
+    std::ostream & stream;
+
+    const char * prefix;
+    const char sep;
+    const char lf;
+
+public:
+    cjsonLogger(std::ostream & _stream=std::clog,
+                  const char * _prefix="[cjson]",
+                  const char _sep=' ',
+                  const char _lf='\n') :
+        stream(_stream), prefix(_prefix), sep(_sep), lf(_lf)
+    {}
+
+    inline void log_prefix() { stream << prefix; }
+    inline void log_sep()    { stream << sep;    }
+    inline void log_lf()     { stream << lf;     }
+
+public:
+    inline void
+    log_call(const char * call_name)
+    {
+        stream << prefix << sep << call_name << lf;
+    } // log_call()
+
+    inline void
+    log_gws(const char * call_name, cl_uint work_dim, const size_t * global_work_size)
+    {
+        stream << prefix << sep << call_name << sep << "gws";
+        for (cl_uint d = 0; d < dvdt::Prof::max_work_dim; ++d)
+        {
+            stream << sep << (d < work_dim ? global_work_size[d] : dvdt::Prof::default_global_work_size);
+        }
+        stream << lf;
+    } // log_gws()
+
+    inline void
+    log_gwo(const char * call_name, cl_uint work_dim, const size_t * global_work_offset)
+    {
+        stream << prefix << sep << call_name << sep << "offset";
+        for (cl_uint d = 0; d < dvdt::Prof::max_work_dim; ++d)
+        {
+            if (global_work_offset)
+            {
+                stream << sep << (d < work_dim ? global_work_offset[d] : dvdt::Prof::default_global_work_offset);
+            }
+            else
+            {
+                stream << sep << dvdt::Prof::null_global_work_offset;
+            }
+        }
+        stream << lf;
+    } // log_gwo()
+
+    template <typename elem_ty> inline void
+    log_list(const char * call_name, const char * list_name, const elem_ty * list, cl_uint list_size)
+    {
+        stream << prefix << sep << call_name << sep << list_name;
+        for (cl_uint i = 0; i < list_size; ++i)
+        {
+            stream << sep << list[i];
+        }
+        stream << lf;
+    } // log_list()
+
+    inline void
+    log_lws(const char * call_name, cl_uint work_dim, const size_t * local_work_size)
+    {
+        stream << prefix << sep << call_name << sep << "lws";
+        for (cl_uint d = 0; d < dvdt::Prof::max_work_dim; ++d)
+        {
+            if (local_work_size)
+            {
+                stream << sep << (d < work_dim ? local_work_size[d] : dvdt::Prof::default_local_work_size);
+            }
+            else
+            {
+                stream << sep << dvdt::Prof::null_local_work_size;
+            }
+        }
+        stream << lf;
+    } // log_lws()
+
+    template <typename num_ty> inline void
+    log_num(const char * call_name, const char * arg_name, num_ty arg_value)
+    {
+        stream << prefix << sep << call_name << sep << arg_name << sep << arg_value << lf;
+    } // log_num()
+
+    inline void
+    log_profiling_info(const char * call_name, cl_event * prof_event)
+    {
+        cl_ulong queued, submit, start, end;
+
+        cl_int prof_errcode = CL_SUCCESS;
+        prof_errcode |= clWaitForEvents(1, prof_event);
+        prof_errcode |= clGetEventProfilingInfo(*prof_event, CL_PROFILING_COMMAND_QUEUED, sizeof(cl_ulong), &queued, NULL);
+        prof_errcode |= clGetEventProfilingInfo(*prof_event, CL_PROFILING_COMMAND_SUBMIT, sizeof(cl_ulong), &submit, NULL);
+        prof_errcode |= clGetEventProfilingInfo(*prof_event, CL_PROFILING_COMMAND_START,  sizeof(cl_ulong), &start,  NULL);
+        prof_errcode |= clGetEventProfilingInfo(*prof_event, CL_PROFILING_COMMAND_END,    sizeof(cl_ulong), &end,    NULL);
+        if (CL_SUCCESS != prof_errcode)
+        {
+            stream << prefix << sep << call_name << sep << "output profiling info error: " << prof_errcode << lf;
+        }
+
+        stream << prefix << sep << call_name << sep << "profiling" <<
+            sep << queued << sep << submit << sep << start << sep << end << lf;
+    } // log_profiling_info()
+
+    inline void
+    log_ptr(const char * call_name, const char * arg_name, const void * arg_value)
+    {
+        stream << prefix << sep << call_name << sep << arg_name << sep << FIXED_WIDTH_PTR(arg_value) << lf;
+    } // log_ptr()
+
+    inline void
+    log_src(const char * call_name, cl_uint count, const char **strings, const size_t *lengths)
+    {
+        for (cl_uint c = 0; c < count; ++c)
+        {
+            stream << prefix << sep << call_name << sep << "strings[" << c << "] <<" << lf;
+            if (NULL == lengths || 0 == lengths[c])
+            {
+                // Program string is null-terminated.
+                stream << strings[c];
+            }
+            else
+            {
+                // When program string it not null-terminated, only
+                // print lengths[c] characters from strings[c].
+                for (cl_uint k = 0; k < lengths[c]; ++ k)
+                {
+                    stream << strings[c][k];
+                }
+            }
+            stream << std::endl;
+            stream << prefix << sep << call_name << sep << "strings[" << c << "] >>" << lf;
+        }
+    } // log_src()
+
+    inline void
+    log_str(const char * call_name, const char * arg_name, const char * arg_value)
+    {
+        stream << prefix << sep << call_name << sep << arg_name << sep << arg_value << lf;
+    } // log_str()
+
+private:
+    inline void
+    log_timestamp(const char * call_name, const char * timestamp_kind)
+    {
+    #if   (1 == DVDT_PROF_WALLCLOCK_BOOST)
+        const boost::posix_time::ptime time = boost::posix_time::microsec_clock::universal_time();
+        const std::string time_str = boost::posix_time::to_iso_extended_string(time);
+    #elif (1 == DVDT_PROF_WALLCLOCK_TIMEOFDAY)
+        const std::string time_str("1970-01-01 00:00:00.000");
+    #endif
+        stream << prefix << sep << call_name << sep << timestamp_kind << sep << time_str << lf;
+    } // log_timestamp()
+public:
+    inline void
+    log_timestamp_end(const char * call_name)
+    {
+        log_timestamp(call_name, "end"  );
+    } // log_timestamp_end()
+
+    inline void
+    log_timestamp_start(const char * call_name)
+    {
+        log_timestamp(call_name, "start");
+    } // log_timestamp_start()
+}; // class cjsonLogger : Logger
+
+
 void
 Prof::Interceptor::update_kernel_lws_map(const char * kernel_lws_list)
 {
