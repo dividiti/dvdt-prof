@@ -465,7 +465,7 @@ public:
     inline void
     log_call(const char * call_name)
     {
-        stream << prefix << sep << call_name << lf;
+        stream << prefix << sep << call_name << lf; // TBR
         // Add previous call object to calls array.
         if (call)
         {
@@ -479,30 +479,46 @@ public:
     inline void
     log_gws(const char * call_name, cl_uint work_dim, const size_t * global_work_size)
     {
-        stream << prefix << sep << call_name << sep << "gws";
+        stream << prefix << sep << call_name << sep << "gws"; // TBR
+        cJSON * gws = cJSON_CreateArray();
         for (cl_uint d = 0; d < dvdt::Prof::max_work_dim; ++d)
         {
-            stream << sep << (d < work_dim ? global_work_size[d] : dvdt::Prof::default_global_work_size);
+            size_t gws_d;
+            gws_d = d < work_dim ?
+                    global_work_size[d] :
+                    dvdt::Prof::default_global_work_size;
+            stream << sep << gws_d; // TBR
+            cJSON * gws_d_as_num = cJSON_CreateNumber(gws_d);
+            cJSON_AddItemToArray(gws, gws_d_as_num);
         }
-        stream << lf;
+        stream << lf; // TBR
+        cJSON_AddItemToObject(call, "gws", gws);
     } // log_gws()
 
     inline void
     log_gwo(const char * call_name, cl_uint work_dim, const size_t * global_work_offset)
     {
-        stream << prefix << sep << call_name << sep << "offset";
+        stream << prefix << sep << call_name << sep << "offset"; // TBR
+        cJSON * gwo = cJSON_CreateArray();
         for (cl_uint d = 0; d < dvdt::Prof::max_work_dim; ++d)
         {
+            size_t gwo_d;
             if (global_work_offset)
             {
-                stream << sep << (d < work_dim ? global_work_offset[d] : dvdt::Prof::default_global_work_offset);
+                gwo_d = d < work_dim ?
+                        global_work_offset[d] :
+                        dvdt::Prof::default_global_work_offset;
             }
             else
             {
-                stream << sep << dvdt::Prof::null_global_work_offset;
+                gwo_d = dvdt::Prof::null_global_work_offset;
             }
+            stream << sep << gwo_d; // TBR
+            cJSON * gwo_d_as_num = cJSON_CreateNumber(gwo_d);
+            cJSON_AddItemToArray(gwo, gwo_d_as_num);
         }
-        stream << lf;
+        stream << lf; // TBR
+        cJSON_AddItemToObject(call, "gwo", gwo);
     } // log_gwo()
 
     template <typename elem_ty> inline void
@@ -519,19 +535,27 @@ public:
     inline void
     log_lws(const char * call_name, cl_uint work_dim, const size_t * local_work_size)
     {
-        stream << prefix << sep << call_name << sep << "lws";
+        stream << prefix << sep << call_name << sep << "lws"; // TBR
+        cJSON * lws = cJSON_CreateArray();
         for (cl_uint d = 0; d < dvdt::Prof::max_work_dim; ++d)
         {
+            size_t lws_d;
             if (local_work_size)
             {
-                stream << sep << (d < work_dim ? local_work_size[d] : dvdt::Prof::default_local_work_size);
+                lws_d = d < work_dim ?
+                        local_work_size[d] :
+                        dvdt::Prof::default_local_work_size;
             }
             else
             {
-                stream << sep << dvdt::Prof::null_local_work_size;
+                lws_d = dvdt::Prof::null_local_work_size;
             }
+            stream << sep << lws_d; // TBR
+            cJSON * lws_d_as_num = cJSON_CreateNumber(lws_d);
+            cJSON_AddItemToArray(lws, lws_d_as_num);
         }
-        stream << lf;
+        stream << lf; // TBR
+        cJSON_AddItemToObject(call, "lws", lws);
     } // log_lws()
 
     template <typename num_ty> inline void
