@@ -668,7 +668,21 @@ private:
     #elif (1 == DVDT_PROF_WALLCLOCK_TIMEOFDAY)
         const std::string time_str("1970-01-01 00:00:00.000");
     #endif
-        stream << prefix << sep << call_name << sep << timestamp_kind << sep << time_str << lf;
+        stream << prefix << sep << call_name << sep << timestamp_kind << sep << time_str << lf; // TBR
+
+        cJSON * timestamp = cJSON_GetObjectItem(call, "timestamp");
+        if (NULL == timestamp)
+        {
+            assert(std::string(timestamp_kind) == std::string("start"));
+            timestamp = cJSON_CreateObject();
+            cJSON_AddItemToObject(call, "timestamp", timestamp);
+        }
+        else
+        {
+            assert(std::string(timestamp_kind) == std::string("end"));
+        }
+        cJSON_AddStringToObject(
+            timestamp, timestamp_kind, time_str.c_str());
     } // log_timestamp()
 public:
     inline void
