@@ -5,7 +5,7 @@ add_library(prof_test SHARED ${SOURCE})
 set_target_properties(prof_test
   PROPERTIES
     COMPILE_FLAGS "-D DVDT_PROF_TEST=1 -D DVDT_PROF_WALLCLOCK_TIMEOFDAY=1")
-target_link_libraries(prof_test dl)
+target_link_libraries(prof_test dl "${CJSON_LIB_DIR}/${CJSON_LIB_NAME}")
 
 
 # Get path to 'libprof_test.so'.
