@@ -618,7 +618,11 @@ public:
     inline void
     log_ptr(const char * call_name, const char * arg_name, const void * arg_value)
     {
-        stream << prefix << sep << call_name << sep << arg_name << sep << ptr_to_str(arg_value) << lf;
+        std::string arg_value_as_std_str = ptr_to_str(arg_value);
+        stream << prefix << sep << call_name << sep << arg_name << sep <<  arg_value_as_std_str << lf; // TBR
+        cJSON * arg_value_as_str =
+            cJSON_CreateString(arg_value_as_std_str.c_str());
+        cJSON_AddItemToObject(call, arg_name, arg_value_as_str);
     } // log_ptr()
 
     inline void
