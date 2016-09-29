@@ -595,11 +595,24 @@ public:
         prof_errcode |= clGetEventProfilingInfo(*prof_event, CL_PROFILING_COMMAND_END,    sizeof(cl_ulong), &end,    NULL);
         if (CL_SUCCESS != prof_errcode)
         {
-            stream << prefix << sep << call_name << sep << "output profiling info error: " << prof_errcode << lf;
+            stream << prefix << sep << call_name << sep << "output profiling info error: " << prof_errcode << lf; // TBR
+            cJSON * prof_errcode_as_num = cJSON_CreateNumber(prof_errcode);
+            cJSON_AddItemToObject(call,
+                "output profiling_error", prof_errcode_as_num);
         }
 
         stream << prefix << sep << call_name << sep << "profiling" <<
-            sep << queued << sep << submit << sep << start << sep << end << lf;
+            sep << queued << sep << submit << sep << start << sep << end << lf; // TBR
+        cJSON * profiling = cJSON_CreateObject();
+        cJSON * queued_as_num = cJSON_CreateNumber(queued);
+        cJSON * submit_as_num = cJSON_CreateNumber(submit);
+        cJSON * start_as_num  = cJSON_CreateNumber(start);
+        cJSON * end_as_num    = cJSON_CreateNumber(end);
+        cJSON_AddItemToObject(profiling, "queued", queued_as_num);
+        cJSON_AddItemToObject(profiling, "submit", submit_as_num);
+        cJSON_AddItemToObject(profiling, "start",  start_as_num);
+        cJSON_AddItemToObject(profiling, "end",    end_as_num);
+        cJSON_AddItemToObject(call, "profiling", profiling);
     } // log_profiling_info()
 
     inline void
