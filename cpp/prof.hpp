@@ -649,7 +649,9 @@ public:
     inline void
     log_str(const char * call_name, const char * arg_name, const char * arg_value)
     {
-        stream << prefix << sep << call_name << sep << arg_name << sep << arg_value << lf;
+        stream << prefix << sep << call_name << sep << arg_name << sep << arg_value << lf; // TBR
+        cJSON * arg_value_as_str = cJSON_CreateString(arg_value);
+        cJSON_AddItemToObject(call, arg_name, arg_value_as_str);
     } // log_str()
 
 private:
