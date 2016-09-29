@@ -35,19 +35,14 @@
 #error "Don't know how to measure wall-clock time"
 #endif
 
-
-#if (1 == DVDT_PROF_TEST)
-#include <iomanip>
-#define FIXED_WIDTH_PTR(ptr) "0x" << std::hex << std::setw(8) << std::setfill('0') << (size_t)(ptr) << std::dec
-#else
-#define FIXED_WIDTH_PTR(ptr) (ptr)
-#endif
-
-
 #if (1 == DVDT_PROF_CJSON)
 #include <cJSON.h>
 #endif
 
+// Log fixed width pointers.
+#if (1 == DVDT_PROF_TEST)
+#include <iomanip>
+#endif
 
 namespace dvdt
 {
@@ -218,6 +213,18 @@ public:
         virtual inline void
         log_timestamp_start(const char * call_name) = 0;
 
+        inline std::string
+        ptr_to_str(const void * ptr)
+        {
+            std::stringstream ss;
+#if (1 == DVDT_PROF_TEST)
+            ss << "0x" << std::hex << std::setw(8) << std::setfill('0') <<
+                reinterpret_cast<uintptr_t>(ptr) << std::dec;
+#else
+            ss << ptr;
+#endif
+            return ss.str();
+        }
     }; // abstract inner class Logger
 
     // Interceptor object.
@@ -355,7 +362,7 @@ public:
     inline void
     log_ptr(const char * call_name, const char * arg_name, const void * arg_value)
     {
-        stream << prefix << sep << call_name << sep << arg_name << sep << FIXED_WIDTH_PTR(arg_value) << lf;
+        stream << prefix << sep << call_name << sep << arg_name << sep << ptr_to_str(arg_value) << lf;
     } // log_ptr()
 
     inline void
@@ -524,12 +531,20 @@ public:
     template <typename elem_ty> inline void
     log_list(const char * call_name, const char * list_name, const elem_ty * list, cl_uint list_size)
     {
-        stream << prefix << sep << call_name << sep << list_name;
+        stream << prefix << sep << call_name << sep << list_name; // TBR
+        cJSON * list_as_array = cJSON_CreateArray();
         for (cl_uint i = 0; i < list_size; ++i)
         {
-            stream << sep << list[i];
+            elem_ty list_i = list[i];
+            stream << sep << list_i; // TBR
+            // FIXME: Currently only used for lists of cl_event's,
+            // which can be represented as pointers.
+            cJSON * list_i_as_str =
+                cJSON_CreateString(ptr_to_str(list_i).c_str());
+            cJSON_AddItemToArray(list_as_array, list_i_as_str);
         }
         stream << lf;
+        cJSON_AddItemToObject(call, list_name, list_as_array);
     } // log_list()
 
     inline void
@@ -561,7 +576,10 @@ public:
     template <typename num_ty> inline void
     log_num(const char * call_name, const char * arg_name, num_ty arg_value)
     {
-        stream << prefix << sep << call_name << sep << arg_name << sep << arg_value << lf;
+        stream << prefix << sep << call_name << sep << arg_name << sep << arg_value << lf; // TBR
+        cJSON * arg_value_as_num = cJSON_CreateNumber(
+                                       static_cast<double>(arg_value));
+        cJSON_AddItemToObject(call, arg_name, arg_value_as_num);
     } // log_num()
 
     inline void
@@ -587,7 +605,7 @@ public:
     inline void
     log_ptr(const char * call_name, const char * arg_name, const void * arg_value)
     {
-        stream << prefix << sep << call_name << sep << arg_name << sep << FIXED_WIDTH_PTR(arg_value) << lf;
+        stream << prefix << sep << call_name << sep << arg_name << sep << ptr_to_str(arg_value) << lf;
     } // log_ptr()
 
     inline void
