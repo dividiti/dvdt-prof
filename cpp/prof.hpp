@@ -539,9 +539,8 @@ public:
             stream << sep << list_i; // TBR
             // FIXME: Currently only used for lists of cl_event's,
             // which can be represented as pointers.
-            cJSON * list_i_as_str =
-                cJSON_CreateString(ptr_to_str(list_i).c_str());
-            cJSON_AddItemToArray(list_as_array, list_i_as_str);
+            cJSON_AddItemToArray(list_as_array,
+                cJSON_CreateString(ptr_to_str(list_i).c_str()));
         }
         stream << lf;
         cJSON_AddItemToObject(call, list_name, list_as_array);
@@ -618,23 +617,25 @@ public:
     inline void
     log_ptr(const char * call_name, const char * arg_name, const void * arg_value)
     {
-        std::string arg_value_as_std_str = ptr_to_str(arg_value);
-        stream << prefix << sep << call_name << sep << arg_name << sep <<  arg_value_as_std_str << lf; // TBR
-        cJSON * arg_value_as_str =
-            cJSON_CreateString(arg_value_as_std_str.c_str());
-        cJSON_AddItemToObject(call, arg_name, arg_value_as_str);
+        std::string arg_value_as_ptr_str = ptr_to_str(arg_value);
+        stream << prefix << sep << call_name << sep << arg_name << sep <<  arg_value_as_ptr_str << lf; // TBR
+        const char * arg_value_as_ptr_cstr = arg_value_as_ptr_str.c_str();
+        cJSON_AddStringToObject(call, arg_name, arg_value_as_ptr_cstr);
     } // log_ptr()
 
     inline void
     log_src(const char * call_name, cl_uint count, const char **strings, const size_t *lengths)
     {
+        cJSON * source = cJSON_CreateObject();
+        cJSON_AddItemToObject(call, "source", source);
         for (cl_uint c = 0; c < count; ++c)
         {
-            stream << prefix << sep << call_name << sep << "strings[" << c << "] <<" << lf;
+            stream << prefix << sep << call_name << sep << "strings[" << c << "] <<" << lf; // TBR
+            std::stringstream string_ss;
             if (NULL == lengths || 0 == lengths[c])
             {
                 // Program string is null-terminated.
-                stream << strings[c];
+                string_ss << strings[c];
             }
             else
             {
@@ -642,11 +643,22 @@ public:
                 // print lengths[c] characters from strings[c].
                 for (cl_uint k = 0; k < lengths[c]; ++ k)
                 {
-                    stream << strings[c][k];
+                    string_ss << strings[c][k];
                 }
             }
-            stream << std::endl;
-            stream << prefix << sep << call_name << sep << "strings[" << c << "] >>" << lf;
+            std::stringstream c_ss;
+            c_ss << c;
+
+            const std::string string_str = string_ss.str();
+            const std::string c_str = c_ss.str();
+
+            const char * string_cstr = string_str.c_str();
+            const char * c_cstr = c_str.c_str();
+
+            stream << string_cstr << std::endl; // TBR
+            stream << prefix << sep << call_name << sep << "strings[" << c << "] >>" << lf; // TBR
+
+            cJSON_AddStringToObject(source, c_cstr, string_cstr);
         }
     } // log_src()
 
@@ -668,6 +680,7 @@ private:
     #elif (1 == DVDT_PROF_WALLCLOCK_TIMEOFDAY)
         const std::string time_str("1970-01-01 00:00:00.000");
     #endif
+        const char * time_cstr = time_str.c_str();
         stream << prefix << sep << call_name << sep << timestamp_kind << sep << time_str << lf; // TBR
 
         cJSON * timestamp = cJSON_GetObjectItem(call, "timestamp");
@@ -682,7 +695,7 @@ private:
             assert(std::string(timestamp_kind) == std::string("end"));
         }
         cJSON_AddStringToObject(
-            timestamp, timestamp_kind, time_str.c_str());
+            timestamp, timestamp_kind, time_cstr);
     } // log_timestamp()
 public:
     inline void
