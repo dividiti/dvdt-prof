@@ -1,5 +1,8 @@
 #!/usr/bin/env python
-import sys, re
+import sys
+import re
+import os
+import json
 
 sys.path.append('../python')
 from prof_parser import prof_parse
@@ -25,7 +28,13 @@ output = sys.stdin.read()
 print 'OUTPUT'
 print output
 
-result = prof_parse(output)[0]
+# Parse JSON output, only if PARSE_JSON is defined to 1 (not to default 0).
+if os.environ.get('PARSE_JSON', '0') == '1':
+    print('Parsing JSON profiler output...')
+    result = json.loads(output)[0]
+else:
+    print('Parsing standard profiler output...')
+    result = prof_parse(output)[0]
 print 'RESULT'
 print result
 print
