@@ -257,6 +257,7 @@ private:
     const char lf;
 
 public:
+    // Constructor.
     ostreamLogger(std::ostream & _stream=std::clog,
                   const char * _prefix="[dv/dt]",
                   const char _sep=' ',
@@ -423,29 +424,23 @@ public:
 }; // class ostreamLogger : Logger
 
 
+#if (1 == DVDT_PROF_CJSON)
 class cjsonLogger : public Prof::Logger
 {
 private:
     std::ostream & stream;
-
-    const char * prefix;
-    const char sep;
-    const char lf;
-
     cJSON * calls;
     cJSON * call;
 
 public:
-    cjsonLogger(std::ostream & _stream=std::clog,
-                  const char * _prefix="[cjson]",
-                  const char _sep=' ',
-                  const char _lf='\n') :
-        stream(_stream), prefix(_prefix), sep(_sep), lf(_lf),
-        calls(NULL), call(NULL)
+    // Constructor.
+    cjsonLogger(std::ostream & _stream=std::clog) :
+        stream(_stream), calls(NULL), call(NULL)
     {
         calls = cJSON_CreateArray();
     }
 
+    // Destructor.
     ~cjsonLogger()
     {
         // Add last call object to calls array.
@@ -454,7 +449,6 @@ public:
             cJSON_AddItemToArray(calls, call);
         }
         // Print calls array.
-        stream << "cJSON result:" << std::endl;
         {
             char * result = cJSON_Print(calls);
             stream << result << std::endl;
@@ -464,15 +458,13 @@ public:
         cJSON_Delete(calls);
     }
 
-    inline void log_prefix() { stream << prefix; }
-    inline void log_sep()    { stream << sep;    }
-    inline void log_lf()     { stream << lf;     }
+    // No-op.
+    inline void log_lf() { return; }
 
 public:
     inline void
     log_call(const char * call_name)
     {
-        stream << prefix << sep << call_name << lf; // TBR
         // Add previous call object to calls array.
         if (call)
         {
@@ -486,7 +478,6 @@ public:
     inline void
     log_gws(const char * call_name, cl_uint work_dim, const size_t * global_work_size)
     {
-        stream << prefix << sep << call_name << sep << "gws"; // TBR
         cJSON * gws = cJSON_CreateArray();
         for (cl_uint d = 0; d < dvdt::Prof::max_work_dim; ++d)
         {
@@ -494,18 +485,15 @@ public:
             gws_d = d < work_dim ?
                     global_work_size[d] :
                     dvdt::Prof::default_global_work_size;
-            stream << sep << gws_d; // TBR
             cJSON * gws_d_as_num = cJSON_CreateNumber(gws_d);
             cJSON_AddItemToArray(gws, gws_d_as_num);
         }
-        stream << lf; // TBR
         cJSON_AddItemToObject(call, "gws", gws);
     } // log_gws()
 
     inline void
     log_gwo(const char * call_name, cl_uint work_dim, const size_t * global_work_offset)
     {
-        stream << prefix << sep << call_name << sep << "offset"; // TBR
         cJSON * gwo = cJSON_CreateArray();
         for (cl_uint d = 0; d < dvdt::Prof::max_work_dim; ++d)
         {
@@ -520,36 +508,30 @@ public:
             {
                 gwo_d = dvdt::Prof::null_global_work_offset;
             }
-            stream << sep << gwo_d; // TBR
             cJSON * gwo_d_as_num = cJSON_CreateNumber(gwo_d);
             cJSON_AddItemToArray(gwo, gwo_d_as_num);
         }
-        stream << lf; // TBR
         cJSON_AddItemToObject(call, "gwo", gwo);
     } // log_gwo()
 
     template <typename elem_ty> inline void
     log_list(const char * call_name, const char * list_name, const elem_ty * list, cl_uint list_size)
     {
-        stream << prefix << sep << call_name << sep << list_name; // TBR
         cJSON * list_as_array = cJSON_CreateArray();
         for (cl_uint i = 0; i < list_size; ++i)
         {
             elem_ty list_i = list[i];
-            stream << sep << list_i; // TBR
             // FIXME: Currently only used for lists of cl_event's,
             // which can be represented as pointers.
             cJSON_AddItemToArray(list_as_array,
                 cJSON_CreateString(ptr_to_str(list_i).c_str()));
         }
-        stream << lf;
         cJSON_AddItemToObject(call, list_name, list_as_array);
     } // log_list()
 
     inline void
     log_lws(const char * call_name, cl_uint work_dim, const size_t * local_work_size)
     {
-        stream << prefix << sep << call_name << sep << "lws"; // TBR
         cJSON * lws = cJSON_CreateArray();
         for (cl_uint d = 0; d < dvdt::Prof::max_work_dim; ++d)
         {
@@ -564,18 +546,15 @@ public:
             {
                 lws_d = dvdt::Prof::null_local_work_size;
             }
-            stream << sep << lws_d; // TBR
             cJSON * lws_d_as_num = cJSON_CreateNumber(lws_d);
             cJSON_AddItemToArray(lws, lws_d_as_num);
         }
-        stream << lf; // TBR
         cJSON_AddItemToObject(call, "lws", lws);
     } // log_lws()
 
     template <typename num_ty> inline void
     log_num(const char * call_name, const char * arg_name, num_ty arg_value)
     {
-        stream << prefix << sep << call_name << sep << arg_name << sep << arg_value << lf; // TBR
         cJSON * arg_value_as_num = cJSON_CreateNumber(
                                        static_cast<double>(arg_value));
         cJSON_AddItemToObject(call, arg_name, arg_value_as_num);
@@ -585,7 +564,6 @@ public:
     log_profiling_info(const char * call_name, cl_event * prof_event)
     {
         cl_ulong queued, submit, start, end;
-
         cl_int prof_errcode = CL_SUCCESS;
         prof_errcode |= clWaitForEvents(1, prof_event);
         prof_errcode |= clGetEventProfilingInfo(*prof_event, CL_PROFILING_COMMAND_QUEUED, sizeof(cl_ulong), &queued, NULL);
@@ -594,14 +572,10 @@ public:
         prof_errcode |= clGetEventProfilingInfo(*prof_event, CL_PROFILING_COMMAND_END,    sizeof(cl_ulong), &end,    NULL);
         if (CL_SUCCESS != prof_errcode)
         {
-            stream << prefix << sep << call_name << sep << "output profiling info error: " << prof_errcode << lf; // TBR
             cJSON * prof_errcode_as_num = cJSON_CreateNumber(prof_errcode);
             cJSON_AddItemToObject(call,
                 "output profiling_error", prof_errcode_as_num);
         }
-
-        stream << prefix << sep << call_name << sep << "profiling" <<
-            sep << queued << sep << submit << sep << start << sep << end << lf; // TBR
         cJSON * profiling = cJSON_CreateObject();
         cJSON * queued_as_num = cJSON_CreateNumber(queued);
         cJSON * submit_as_num = cJSON_CreateNumber(submit);
@@ -618,7 +592,6 @@ public:
     log_ptr(const char * call_name, const char * arg_name, const void * arg_value)
     {
         std::string arg_value_as_ptr_str = ptr_to_str(arg_value);
-        stream << prefix << sep << call_name << sep << arg_name << sep <<  arg_value_as_ptr_str << lf; // TBR
         const char * arg_value_as_ptr_cstr = arg_value_as_ptr_str.c_str();
         cJSON_AddStringToObject(call, arg_name, arg_value_as_ptr_cstr);
     } // log_ptr()
@@ -630,7 +603,6 @@ public:
         cJSON_AddItemToObject(call, "source", source);
         for (cl_uint c = 0; c < count; ++c)
         {
-            stream << prefix << sep << call_name << sep << "strings[" << c << "] <<" << lf; // TBR
             std::stringstream string_ss;
             if (NULL == lengths || 0 == lengths[c])
             {
@@ -655,9 +627,6 @@ public:
             const char * string_cstr = string_str.c_str();
             const char * c_cstr = c_str.c_str();
 
-            stream << string_cstr << std::endl; // TBR
-            stream << prefix << sep << call_name << sep << "strings[" << c << "] >>" << lf; // TBR
-
             cJSON_AddStringToObject(source, c_cstr, string_cstr);
         }
     } // log_src()
@@ -665,7 +634,6 @@ public:
     inline void
     log_str(const char * call_name, const char * arg_name, const char * arg_value)
     {
-        stream << prefix << sep << call_name << sep << arg_name << sep << arg_value << lf; // TBR
         cJSON * arg_value_as_str = cJSON_CreateString(arg_value);
         cJSON_AddItemToObject(call, arg_name, arg_value_as_str);
     } // log_str()
@@ -681,8 +649,6 @@ private:
         const std::string time_str("1970-01-01 00:00:00.000");
     #endif
         const char * time_cstr = time_str.c_str();
-        stream << prefix << sep << call_name << sep << timestamp_kind << sep << time_str << lf; // TBR
-
         cJSON * timestamp = cJSON_GetObjectItem(call, "timestamp");
         if (NULL == timestamp)
         {
@@ -710,7 +676,7 @@ public:
         log_timestamp(call_name, "start");
     } // log_timestamp_start()
 }; // class cjsonLogger : Logger
-
+#endif // (1 == DVDT_PROF_CJSON)
 
 void
 Prof::Interceptor::update_kernel_lws_map(const char * kernel_lws_list)

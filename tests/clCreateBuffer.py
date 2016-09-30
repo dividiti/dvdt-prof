@@ -18,7 +18,7 @@ source = {}
 with open(call + _id + '.cpp', 'r') as f:
     source['text'] = f.read()
     source['context'] = re.search('\(cl_context\) (?P<context>%s)' % ptr_regex, source['text']).group('context')
-    source['flags'] = re.search('\(cl_mem_flags\) (?P<flags>\d*)', source['text']).group('flags')
+    source['flags'] = int(re.search('\(cl_mem_flags\) (?P<flags>\d*)', source['text']).group('flags'))
     source['size'] = int(re.search('size(\s*)=(\s*)(?P<size>\d+)', source['text']).group('size'))
     source['host_ptr'] = re.search('\(void \*\) (?P<host_ptr>%s)' % ptr_regex, source['text']).group('host_ptr')
     source['errcode_ret'] = re.search('\(cl_int \*\) (?P<errcode_ret>%s)' % ptr_regex, source['text']).group('errcode_ret')
@@ -33,7 +33,7 @@ print output
 # Parse JSON output, only if PARSE_JSON is defined to 1 (not to default 0).
 if os.environ.get('PARSE_JSON', '0') == '1':
     print('Parsing JSON profiler output...')
-    result = json.loads(output)
+    result = json.loads(output)[0]
 else:
     print('Parsing standard profiler output...')
     result = prof_parse(output)[0]

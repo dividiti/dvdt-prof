@@ -44,8 +44,8 @@ def match_clCreateBuffer(output, result):
     # Arguments.
     result['context'] = re.search('%s %s %s (?P<context>%s)' % \
         (prefix, call, 'context', ptr_regex), output).group('context')
-    result['flags'] = re.search('%s %s %s (?P<flags>%s)'   % \
-        (prefix, call, 'flags', int_regex), output).group('flags')
+    result['flags'] = int(re.search('%s %s %s (?P<flags>%s)'   % \
+        (prefix, call, 'flags', int_regex), output).group('flags'))
     result['size']  = int(re.search('%s %s %s (?P<size>%s)' % \
         (prefix, call, 'size', int_regex), output).group('size'))
     result['host_ptr'] = re.search('%s %s %s (?P<host_ptr>%s)' % \
