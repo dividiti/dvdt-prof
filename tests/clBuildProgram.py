@@ -17,11 +17,11 @@ print '%s%s' % (call, _id)
 # Parse test source.
 source = {}
 with open(call + _id + '.cpp', 'r') as f:
-  source['text'] = f.read()
-  source['program'] = re.search('\(cl_program\) (?P<program>%s)' %
-				ptr_regex, source['text']).group('program')
-  source['options'] = re.search('options = \"(?P<options>%s)\"' %
-				opts_regex, source['text']).group('options')
+    source['text'] = f.read()
+    source['program'] = re.search('\(cl_program\) (?P<program>%s)' %
+                                  ptr_regex, source['text']).group('program')
+    source['options'] = re.search('options = \"(?P<options>%s)\"' %
+                                  opts_regex, source['text']).group('options')
 
 # Read from stdin (via pipe).
 output = sys.stdin.read()
@@ -30,11 +30,11 @@ print output
 
 # Parse JSON output, only if PARSE_JSON is defined to 1 (not to default 0).
 if os.environ.get('PARSE_JSON', '0') == '1':
-  print('Parsing JSON profiler output...')
-  result = json.loads(output)[0]
+    print('Parsing JSON profiler output...')
+    result = json.loads(output)[0]
 else:
-  print('Parsing standard profiler output...')
-  result = prof_parse(output)[0]
+    print('Parsing standard profiler output...')
+    result = prof_parse(output)[0]
 print 'RESULT'
 print result
 print
