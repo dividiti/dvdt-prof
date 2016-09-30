@@ -247,6 +247,7 @@ public:
 }; // class Prof
 
 
+#if (1 != DVDT_PROF_CJSON)
 class ostreamLogger : public Prof::Logger
 {
 private:
@@ -290,7 +291,7 @@ public:
     inline void
     log_gwo(const char * call_name, cl_uint work_dim, const size_t * global_work_offset)
     {
-        stream << prefix << sep << call_name << sep << "offset";
+        stream << prefix << sep << call_name << sep << "gwo";
         for (cl_uint d = 0; d < dvdt::Prof::max_work_dim; ++d)
         {
             if (global_work_offset)
@@ -427,14 +428,17 @@ public:
         log_timestamp(call_name, "start");
     } // log_timestamp_start()
 }; // class ostreamLogger : Logger
-
+#endif // (1 != DVDT_PROF_CJSON)
 
 #if (1 == DVDT_PROF_CJSON)
 class cjsonLogger : public Prof::Logger
 {
 private:
+    // Stream to write the final JSON to.
     std::ostream & stream;
+    // Array (list) of call objects.
     cJSON * calls;
+    // Currently open call object.
     cJSON * call;
 
 public:
