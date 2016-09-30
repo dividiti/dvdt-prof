@@ -29,6 +29,7 @@ endif()
 # The CJSON option.
 set(CJSON_SET "0" CACHE BOOLEAN "Parse JSON or default output.")
 if("${CJSON_SET}" STREQUAL "1")
+  add_definitions(-D DVDT_PROF_CJSON=1)
   include_directories("${CJSON_INCLUDE_DIR}")
   SET(CJSON_LIB_PATH "${CJSON_LIB_DIR}/${CJSON_LIB_NAME}")
 endif()
@@ -37,8 +38,6 @@ endif()
 set(CMAKE_CXX_FLAGS "-O2 -W -Wall")
 message(STATUS "Using compiler flags: ${CMAKE_CXX_FLAGS}")
 message(STATUS "Using linker flags: ${CMAKE_SHARED_LINKER_FLAGS}")
-message(STATUS "Using tool flags: ${TOOL_FLAGS}")
-add_definitions("${TOOL_FLAGS}")
 
 # Output directory for executables.
 SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)

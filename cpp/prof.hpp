@@ -344,7 +344,7 @@ public:
     log_profiling_info(const char * call_name, cl_event * prof_event)
     {
         cl_ulong queued, submit, start, end;
-
+#ifndef DVDT_PROF_TEST
         cl_int prof_errcode = CL_SUCCESS;
         prof_errcode |= clWaitForEvents(1, prof_event);
         prof_errcode |= clGetEventProfilingInfo(*prof_event, CL_PROFILING_COMMAND_QUEUED, sizeof(cl_ulong), &queued, NULL);
@@ -355,7 +355,12 @@ public:
         {
             stream << prefix << sep << call_name << sep << "output profiling info error: " << prof_errcode << lf;
         }
-
+#else
+        queued = 100200300400L;
+        submit = 100200300500L;
+        start  = 100200300600L;
+        end    = 100200300700L;
+#endif
         stream << prefix << sep << call_name << sep << "profiling" <<
             sep << queued << sep << submit << sep << start << sep << end << lf;
     } // log_profiling_info()
@@ -564,6 +569,7 @@ public:
     log_profiling_info(const char * call_name, cl_event * prof_event)
     {
         cl_ulong queued, submit, start, end;
+#ifndef DVDT_PROF_TEST
         cl_int prof_errcode = CL_SUCCESS;
         prof_errcode |= clWaitForEvents(1, prof_event);
         prof_errcode |= clGetEventProfilingInfo(*prof_event, CL_PROFILING_COMMAND_QUEUED, sizeof(cl_ulong), &queued, NULL);
@@ -576,6 +582,12 @@ public:
             cJSON_AddItemToObject(call,
                 "output profiling_error", prof_errcode_as_num);
         }
+#else
+        queued = 100200300400L;
+        submit = 100200300500L;
+        start  = 100200300600L;
+        end    = 100200300700L;
+#endif
         cJSON * profiling = cJSON_CreateObject();
         cJSON * queued_as_num = cJSON_CreateNumber(queued);
         cJSON * submit_as_num = cJSON_CreateNumber(submit);

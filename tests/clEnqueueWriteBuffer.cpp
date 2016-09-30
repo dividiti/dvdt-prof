@@ -17,8 +17,9 @@ int main()
     cl_int errcode = clEnqueueWriteBuffer(queue, buffer, blocking, offset, size, ptr, num_events_in_wait_list, event_wait_list, event);
     assert(CL_SUCCESS == errcode);
 
-    // Emulate profiling output.
-    std::cout << "[dv/dt] clEnqueueWriteBuffer profiling 100200300400 100200300500 100200300600 100200300700\n";
+    // Uncomment to emulate ostream profiling output (deprecated approach).
+    // NB: Pattern matching still works even when it's commented out.
+    // std::cout << "[dv/dt] clEnqueueWriteBuffer profiling 100200300400 100200300500 100200300600 100200300700\n";
 
     return 0;
 }
