@@ -1,5 +1,8 @@
 #!/usr/bin/env python
-import os, sys, re
+import os
+import sys
+import re
+import json
 
 sys.path.append('../python')
 from prof_parser import prof_parse
@@ -44,8 +47,8 @@ with open(call + _id + '.cpp', 'r') as f:
     source['kernel'] = re.search('\(cl_kernel\) (?P<kernel>%s)' % ptr_regex, source['text']).group('kernel')
     
     work_dim = int(re.search('work_dim(\s*)=(\s*)(?P<work_dim>\d+)', source['text']).group('work_dim'))
-    offset = match_init_list(source['text'], 'global_work_offset\[%d\]' % work_dim, int_regex)
-    source['offset'] = ([int(i) for i in offset] + [default_offset] * (max_work_dim - work_dim)) if offset else [null_offset] * max_work_dim
+    gwo = match_init_list(source['text'], 'global_work_offset\[%d\]' % work_dim, int_regex)
+    source['gwo'] = ([int(i) for i in gwo] + [default_offset] * (max_work_dim - work_dim)) if gwo else [null_offset] * max_work_dim
     gws = match_init_list(source['text'], 'global_work_size\[%d\]' % work_dim, int_regex)
     source['gws'] = [int(i) for i in gws] + [default_gws] * (max_work_dim - work_dim)
     # Interceptor updates local work size from DVDT_PROF_LWS, so ignore test source and parse DVDT_PROF_LWS instead.
@@ -73,7 +76,13 @@ output = sys.stdin.read()
 print 'OUTPUT'
 print output
 
-result = prof_parse(output)[0]
+# Parse JSON output, only if PARSE_JSON is defined to 1 (not to default 0).
+if os.environ.get('PARSE_JSON', '0') == '1':
+    print('Parsing JSON profiler output...')
+    result = json.loads(output)[0]
+else:
+    print('Parsing standard profiler output...')
+    result = prof_parse(output)[0]
 print 'RESULT'
 print result
 print
@@ -82,7 +91,7 @@ status = True
 status &= ("dvdt_prof_kernel" == result['name'])
 status &= (source['queue'] == result['queue'])
 status &= (source['kernel'] == result['kernel'])
-status &= (cmp(source['offset'], result['offset']) == 0)
+status &= (cmp(source['gwo'], result['gwo']) == 0)
 status &= (cmp(source['gws'], result['gws']) == 0)
 status &= (cmp(source['lws'], result['lws']) == 0)
 status &= (cmp(source['event_wait_list'], result['event_wait_list']) == 0)

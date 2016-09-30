@@ -142,8 +142,8 @@ def match_clEnqueueNDRangeKernel(output, result):
         (prefix, call, 'queue', ptr_regex), output).group('queue')
     result['kernel'] = re.search('%s %s %s (?P<kernel>%s)' % \
         (prefix, call, 'kernel', ptr_regex), output).group('kernel')
-    result['offset'] = [int(i) for i in re.search('%s %s %s (?P<offset>%s)' % \
-        (prefix, call, 'offset', '.*'), output).group('offset').split()]
+    result['gwo'] = [int(i) for i in re.search('%s %s %s (?P<gwo>%s)' % \
+        (prefix, call, 'gwo', '.*'), output).group('gwo').split()]
     result['gws']    = [int(i) for i in re.search('%s %s %s (?P<gws>%s)' % \
         (prefix, call, 'gws', '.*'), output).group('gws').split()]
     result['lws']    = [int(i) for i in re.search('%s %s %s (?P<lws>%s)' % \
