@@ -116,10 +116,10 @@ def match_clCreateProgramWithSource(output, result):
     result['errcode_ret'] = re.search('%s %s %s (?P<errcode_ret>%s)' % \
         (prefix, call, 'errcode_ret', ptr_regex), output).group('errcode_ret')
 
-    result['string'] = {}
+    result['source'] = {}
     for k in range(result['count']):
         prefix_call_string_k = '%s %s %s' %  (prefix, call, 'strings\[%d\]' % k)
-        result['string'][k] = re.search('%s <<\n(?P<string>.*)\n%s >>\n' % \
+        result['source'][k] = re.search('%s <<\n(?P<string>.*)\n%s >>\n' % \
             (prefix_call_string_k, prefix_call_string_k), output, re.DOTALL).group('string')
 
     # Return value.

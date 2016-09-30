@@ -35,7 +35,7 @@ print
 status = True
 status &= (source['context'] == result['context'])
 status &= (source['count'] == result['count'])
-status &= (source['string0'] == result['string'][0])
+status &= (source['string0'] == result['source'][0])
 status &= (source['lengths'] == result['lengths'])
 status &= (source['errcode_ret']  == result['errcode_ret'])
 status &= (source['program']  == result['program'])
