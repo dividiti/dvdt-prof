@@ -5,8 +5,7 @@ add_library(prof_test SHARED ${SOURCE})
 set_target_properties(prof_test
   PROPERTIES
     COMPILE_FLAGS "-D DVDT_PROF_TEST=1 -D DVDT_PROF_WALLCLOCK_TIMEOFDAY=1")
-target_link_libraries(prof_test dl "${CJSON_LIB_DIR}/${CJSON_LIB_NAME}")
-
+target_link_libraries(prof_test dl "${CJSON_LIB_PATH}")
 
 # Get path to 'libprof_test.so'.
 set(PROF_TEST $<TARGET_FILE:prof_test>)
@@ -38,7 +37,7 @@ foreach(test ${cl_api_test_binaries})
     set_tests_properties(${test}
         PROPERTIES
             PASS_REGULAR_EXPRESSION ${cl_api_test_regex}
-            ENVIRONMENT LD_PRELOAD=${PROF_TEST})
+            ENVIRONMENT "LD_PRELOAD=${PROF_TEST};PARSE_JSON=${CJSON_SET}")
 endforeach()
 
 set_property(TEST clEnqueueNDRangeKernel_LWS

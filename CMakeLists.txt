@@ -14,7 +14,6 @@ set(Prof_VERSION_MAJOR 0)
 set(Prof_VERSION_MINOR 1)
 message("dividiti OpenCL API Profiler v${Prof_VERSION_MAJOR}.${Prof_VERSION_MINOR}")
 
-
 # The WALLCLOCK option.
 set(WALLCLOCK "boost" CACHE STRING "How to measure wall-clock time.")
 if(WALLCLOCK STREQUAL "boost")
@@ -25,6 +24,13 @@ elseif(WALLCLOCK STREQUAL "timeofday")
   add_definitions(-D DVDT_PROF_WALLCLOCK_TIMEOFDAY=1)
 else()
   message(WARNING "Unsupported WALLCLOCK option: ${WALLCLOCK}.")
+endif()
+
+# The CJSON option.
+set(CJSON_SET "0" CACHE BOOLEAN "Parse JSON or default output.")
+if("${CJSON_SET}" STREQUAL "1")
+  include_directories("${CJSON_INCLUDE_DIR}")
+  SET(CJSON_LIB_PATH "${CJSON_LIB_DIR}/${CJSON_LIB_NAME}")
 endif()
 
 # Set build options.
@@ -49,7 +55,6 @@ configure_file(
 # Add the binary tree to the search path for include files
 # so that 'prof_info.hpp' can be found.
 include_directories("${PROJECT_BINARY_DIR}/include")
-include_directories("${CJSON_INCLUDE_DIR}")
 
 # Add source files.
 set(SOURCE
@@ -58,7 +63,7 @@ set(SOURCE
 
 # Add an interceptor library that intercepts some calls in 'libOpenCL.so'.
 add_library(prof SHARED ${SOURCE})
-target_link_libraries(prof dl "${CJSON_LIB_DIR}/${CJSON_LIB_NAME}")
+target_link_libraries(prof dl "${CJSON_LIB_PATH}")
 
 # Test descriptions are in a separate file.
 include(CTest)
