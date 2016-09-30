@@ -1,5 +1,8 @@
 #!/usr/bin/env python
-import sys, re
+import sys
+import re
+import os
+import json
 
 sys.path.append('../python')
 from prof_parser import prof_parse
@@ -16,7 +19,7 @@ with open(call + _id + '.cpp', 'r') as f:
     source['text'] = f.read()
     source['context'] = re.search('\(cl_context\) (?P<context>%s)' % ptr_regex, source['text']).group('context')
     source['device'] = re.search('\(cl_device_id\) (?P<device>%s)' % ptr_regex, source['text']).group('device')
-    source['properties'] = re.search('\(cl_command_queue_properties\) (?P<props>\d*)', source['text']).group('props')
+    source['properties'] = int(re.search('\(cl_command_queue_properties\) (?P<props>\d*)', source['text']).group('props'))
     source['errcode_ret'] = re.search('\(cl_int \*\) (?P<errcode_ret>%s)' % ptr_regex, source['text']).group('errcode_ret')
     # The following should match the assert statement.
     source['queue'] = re.search('\(cl_command_queue\) (?P<queue>%s)' % ptr_regex, source['text']).group('queue')
@@ -26,7 +29,13 @@ output = sys.stdin.read()
 print 'OUTPUT'
 print output
 
-result = prof_parse(output)[0]
+# Parse JSON output, only if PARSE_JSON is defined to 1 (not to default 0).
+if os.environ.get('PARSE_JSON', '0') == '1':
+    print('Parsing JSON profiler output...')
+    result = json.loads(output)[0]
+else:
+    print('Parsing standard profiler output...')
+    result = prof_parse(output)[0]
 print 'RESULT'
 print result
 print

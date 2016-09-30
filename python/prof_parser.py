@@ -69,8 +69,8 @@ def match_clCreateCommandQueue(output, result):
         (prefix, call, 'context', ptr_regex), output).group('context')
     result['device'] = re.search('%s %s %s (?P<device>%s)'  % \
         (prefix, call, 'device', ptr_regex), output).group('device')
-    result['properties'] = re.search('%s %s %s (?P<properties>%s)'   % \
-        (prefix, call, 'properties', int_regex), output).group('properties')
+    result['properties'] = int(re.search('%s %s %s (?P<properties>%s)' % \
+        (prefix, call, 'properties', int_regex), output).group('properties'))
     result['errcode_ret'] = re.search('%s %s %s (?P<errcode_ret>%s)' % \
         (prefix, call, 'errcode_ret', ptr_regex), output).group('errcode_ret')
 
