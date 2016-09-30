@@ -119,7 +119,7 @@ def match_clCreateProgramWithSource(output, result):
     result['source'] = {}
     for k in range(result['count']):
         prefix_call_string_k = '%s %s %s' %  (prefix, call, 'strings\[%d\]' % k)
-        result['source'][k] = re.search('%s <<\n(?P<string>.*)\n%s >>\n' % \
+        result['source'][str(k)] = re.search('%s <<\n(?P<string>.*)\n%s >>\n' % \
             (prefix_call_string_k, prefix_call_string_k), output, re.DOTALL).group('string')
 
     # Return value.
