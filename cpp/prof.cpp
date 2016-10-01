@@ -10,9 +10,9 @@ static dvdt::Prof prof;
 
 // Static container for profiler's logger.
 #if (1 == DVDT_PROF_CJSON)
-static dvdt::cjsonLogger logger(std::cerr);
+static dvdt::cjsonLogger logger;
 #else
-static dvdt::ostreamLogger logger(std::cerr, "[dv/dt]");
+static dvdt::ostreamLogger logger;
 #endif
 
 //
