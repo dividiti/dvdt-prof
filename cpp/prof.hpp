@@ -44,6 +44,11 @@
 #include <iomanip>
 #endif
 
+// Configure output stream at compile-time.
+#ifndef DVDT_PROF_OSTREAM
+#define DVDT_PROF_OSTREAM std::cout
+#endif
+
 namespace dvdt
 {
 
@@ -259,7 +264,7 @@ private:
 
 public:
     // Constructor.
-    ostreamLogger(std::ostream & _stream=std::clog,
+    ostreamLogger(std::ostream & _stream=DVDT_PROF_OSTREAM,
                   const char * _prefix="[dv/dt]",
                   const char _sep=' ',
                   const char _lf='\n') :
@@ -443,7 +448,7 @@ private:
 
 public:
     // Constructor.
-    cjsonLogger(std::ostream & _stream=std::clog) :
+    cjsonLogger(std::ostream & _stream=DVDT_PROF_OSTREAM) :
         stream(_stream), calls(NULL), call(NULL)
     {
         calls = cJSON_CreateArray();
