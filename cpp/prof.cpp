@@ -336,11 +336,13 @@ clEnqueueNDRangeKernel(
         queue, kernel, work_dim, global_work_offset, global_work_size, local_work_size,\
         num_events_in_wait_list, event_wait_list, prof_event);
 
+    // Wait for original call to complete.
+    logger.log_profiling_info(call, prof_event);
+
     logger.log_timestamp_end(call);
 #else
-    cl_event * prof_event = NULL;
+    logger.log_profiling_info(call, NULL);
 #endif
-    logger.log_profiling_info(call, prof_event);
 
     // Return value.
     logger.log_num<cl_int>(call, "errcode", errcode); logger.log_lf();
@@ -398,11 +400,13 @@ clEnqueueReadBuffer(
     errcode = prof.interceptor.clEnqueueReadBuffer_original(queue, buffer, blocking, offset, size, ptr,
         num_events_in_wait_list, event_wait_list, prof_event);
 
+    // Wait for original call to complete.
+    logger.log_profiling_info(call, prof_event);
+
     logger.log_timestamp_end(call);
 #else
-    cl_event * prof_event = NULL;
+    logger.log_profiling_info(call, NULL);
 #endif
-    logger.log_profiling_info(call, prof_event);
 
     // Return value.
     logger.log_num<cl_int>(call, "errcode", errcode); logger.log_lf();
@@ -459,11 +463,13 @@ clEnqueueWriteBuffer(
         queue, buffer, blocking, offset, size, ptr,
         num_events_in_wait_list, event_wait_list, prof_event);
 
+    // Wait for original call to complete.
+    logger.log_profiling_info(call, prof_event);
+
     logger.log_timestamp_end(call);
 #else
-    cl_event * prof_event = NULL;
+    logger.log_profiling_info(call, NULL);
 #endif
-    logger.log_profiling_info(call, prof_event);
 
     // Return value.
     logger.log_num<cl_int>(call, "errcode", errcode); logger.log_lf();
