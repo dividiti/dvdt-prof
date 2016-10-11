@@ -460,7 +460,9 @@ public:
         // Print calls array.
         {
             char * result = cJSON_Print(calls);
-            stream << result << std::endl;
+            stream << prefix << " <<\n";
+            stream << result << "\n";
+            stream << prefix << " >>\n";
             free(result);
         }
         // Free calls array.

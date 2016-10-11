@@ -3,6 +3,7 @@
 #
 
 import re
+import json
 
 #
 # Common definitions.
@@ -279,10 +280,25 @@ def next_match(output):
     return parser(output, result)
 
 
-def prof_parse(output):
+def prof_parse_ostream(output):
     results = []
     (output, result) = next_match(output)
     while result:
         results.append(result)
         (output, result) = next_match(output)
+    return results
+
+
+def prof_parse_cjson(output):
+    results = []
+    json = re.search('%s <<\n(?P<json>.*)\n%s >>\n' % (prefix, prefix), output, re.DOTALL)
+    if json:
+        results = json.loads(json.group('json'))
+    return results
+
+
+def prof_parse(output):
+    results = prof_parse_cjson(output)
+    if not results:
+        results = prof_parse_ostream(output)
     return results
