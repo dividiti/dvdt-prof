@@ -269,13 +269,13 @@ def next_match(output):
         raise Exception('OpenCL API call %s not supported!' % result['call'])
 
     # Start and end timestamps are optional (especially in tests) but common to all calls.
-    result['timestamps'] = {}
+    result['timestamp'] = {}
     start_match = re.search('%s %s start (?P<start>%s)' % (prefix, result['call'], iso_regex), output[match.end():])
     if start_match:
-        result['timestamps']['start'] = start_match.group('start')
+        result['timestamp']['start'] = start_match.group('start')
     end_match = re.search('%s %s end (?P<end>%s)' % (prefix, result['call'], iso_regex), output[match.end():])
     if end_match:
-        result['timestamps']['end'] = end_match.group('end')
+        result['timestamp']['end'] = end_match.group('end')
 
     return parser(output, result)
 
