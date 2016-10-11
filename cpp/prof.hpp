@@ -22,11 +22,6 @@
 #include <CL/opencl.h>
 #endif
 
-// FIXME: still needed?
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
-
 #if   (1 == DVDT_PROF_WALLCLOCK_BOOST)
 #include <boost/date_time.hpp>
 #elif (1 == DVDT_PROF_WALLCLOCK_TIMEOFDAY)
