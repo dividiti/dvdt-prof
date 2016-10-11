@@ -1,0 +1,5 @@
+v0.2 First public release.
+* Output JSON online.
+
+v0.1 Internal development.
+* Output to stdout online; parse to JSON offline.

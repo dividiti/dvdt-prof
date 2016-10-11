@@ -11,7 +11,7 @@ set(Prof_COPYRIGHT_DIVIDITI "\"2015-2016 (c) dividiti\"")
 
 # The Prof version.
 set(Prof_VERSION_MAJOR 0)
-set(Prof_VERSION_MINOR 1)
+set(Prof_VERSION_MINOR 2)
 message("dividiti OpenCL API Profiler v${Prof_VERSION_MAJOR}.${Prof_VERSION_MINOR}")
 
 # The WALLCLOCK option.
