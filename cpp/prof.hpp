@@ -436,6 +436,8 @@ class cjsonLogger : public Prof::Logger
 private:
     // Stream to write the final JSON to.
     std::ostream & stream;
+    // Prefix for pattern matching the final JSON.
+    const char * prefix;
     // Array (list) of call objects.
     cJSON * calls;
     // Currently open call object.
@@ -443,8 +445,9 @@ private:
 
 public:
     // Constructor.
-    cjsonLogger(std::ostream & _stream=DVDT_PROF_OSTREAM) :
-        stream(_stream), calls(NULL), call(NULL)
+    cjsonLogger(std::ostream & _stream=DVDT_PROF_OSTREAM,
+                const char * _prefix="[dv/dt]") :
+        stream(_stream), prefix(_prefix), calls(NULL), call(NULL)
     {
         calls = cJSON_CreateArray();
     }
@@ -460,7 +463,9 @@ public:
         // Print calls array.
         {
             char * result = cJSON_Print(calls);
-            stream << result << std::endl;
+            stream << prefix << " <<\n";
+            stream << result << "\n";
+            stream << prefix << " >>\n";
             free(result);
         }
         // Free calls array.
