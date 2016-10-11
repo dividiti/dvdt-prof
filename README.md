@@ -1,8 +1,73 @@
 # dv/dt prof: OpenCL API profiler
 
 The `dv/dt prof` profiler (`libprof.so`) intercepts some OpenCL API calls and
-prints their arguments before invoking the underlying OpenCL implementation.
-The Python parser (`prof_parser.py`) converts the profiler's output into JSON.
+logs their arguments before invoking the underlying OpenCL implementation.
+
+As of v0.2, the profiler supports two modes:
+
+1. The `ostream` mode logs to `stdout` blocks of text like the following:
+```
+[dv/dt] clEnqueueNDRangeKernel
+[dv/dt] clEnqueueNDRangeKernel name im2col_float
+[dv/dt] clEnqueueNDRangeKernel queue 0x5d3240
+[dv/dt] clEnqueueNDRangeKernel kernel 0xbb0300
+[dv/dt] clEnqueueNDRangeKernel gwo 0 0 0
+[dv/dt] clEnqueueNDRangeKernel gws 16384 1 1
+[dv/dt] clEnqueueNDRangeKernel lws 128 1 1
+[dv/dt] clEnqueueNDRangeKernel event_wait_list
+[dv/dt] clEnqueueNDRangeKernel event 0
+[dv/dt] clEnqueueNDRangeKernel start 2016-10-11T20:41:18.041468
+[dv/dt] clEnqueueNDRangeKernel profiling 52910121520869 52910121595577 52910130751092 52910132647472
+[dv/dt] clEnqueueNDRangeKernel end 2016-10-11T20:41:18.054802
+[dv/dt] clEnqueueNDRangeKernel errcode 0
+```
+
+In an offline post-processing step, the Python parser (`prof_parser.py`)
+converts the profiler's output into JSON as the following:
+```
+{
+  "kernel": "0x7f8700",
+  "profiling": {
+    "start": 46559873667079,
+    "end": 46559875636796,
+    "queued": 46559863661412,
+    "submit": 46559863742203
+  },
+  "name": "im2col_float",
+  "lws": [
+    128,
+    1,
+    1
+  ],
+  "gwo": [
+    0,
+    0,
+    0
+  ],
+  "errcode": 0,
+  "queue": "0x1cd240",
+  "call": "clEnqueueNDRangeKernel",
+  "gws": [
+    16384,
+    1,
+    1
+  ],
+  "timestamp": {
+    "start": "2016-10-11T15:50:45.883538",
+    "end": "2016-10-11T15:50:45.897364"
+  },
+  "enqueue_id": 24,
+  "event_wait_list": [],
+  "event": "0"
+}
+```
+
+2. The `cjson` mode uses the [cJSON](https://github.com/DaveGamble/cJSON/)
+library to build JSON online, which then gets logged to `stdout`. In an offline
+post-processing step, the Python parser (`prof_parser.py`) simply loads JSON
+between the `[dv/dt] <<` and `[dv/dt] >>` markers.
+
+# Effect on execution time
 
 Using the profiler can slow down the program for several reasons:
 
@@ -20,7 +85,15 @@ affected.
 
 [OpenCL page at the Khronos Group](https://www.khronos.org/opencl)
 
-# Building the profiler
+# Installing the profiler
+
+**NB:** The easiest way to install the profiler is by using
+[CK-Caffe](http://github.com/dividiti/ck-caffe) packages:
+```
+$ ck pull repo:ck-caffe --url=https://github.com/dividiti/ck-caffe
+$ ck install ck-caffe:package:tool-dvdt-prof
+$ ck install ck-caffe:package:tool-dvdt-prof-cjson
+```
 
 ## Prerequisites
 
