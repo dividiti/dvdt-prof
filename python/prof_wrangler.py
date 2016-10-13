@@ -42,8 +42,10 @@ def filter_calls(trace, call_names):
     return filtered_trace
 
 # Return a DataFrame containing the differences between the profiling markers
-# and the timestamps in nanoseconds for a trace with any enqueues.
-def df_enqueues_ns(nqs, label_fn = lambda nq: '%s' % str(nq['call_index'])) :
+# and the timestamps in nanoseconds for a trace (nqs) with any enqueues
+# (clEnqueueNDRangeKernel, clEnqueueReadBuffer, clEnqueueWriteBuffer, etc).
+def df_enqueues_ns(nqs,
+                   label_fn = lambda nq: '%s' % str(nq['call_index']).zfill(6)) :
     def _df_data():
 	data = [
             {
@@ -52,7 +54,7 @@ def df_enqueues_ns(nqs, label_fn = lambda nq: '%s' % str(nq['call_index'])) :
                 'p3 - p2' : nq['profiling']['end']    - nq['profiling']['start'],  # kernel execution time
                 'p3 - p0' : nq['profiling']['end']    - nq['profiling']['queued'], # total execution time
                 't1 - t0' : ts_delta_ns(ts_end=nq['timestamp']['end'], ts_start=nq['timestamp']['start']), # chrono time
-                't1 - t0 - (p3 - p0)' :
+                '(t1 - t0) - (p3 - p0)' :
                             ts_delta_ns(ts_end=nq['timestamp']['end'], ts_start=nq['timestamp']['start']) -
                             nq['profiling']['end'] + nq['profiling']['queued'],    # chrono overhead
             }
@@ -69,3 +71,72 @@ def df_enqueues_ns(nqs, label_fn = lambda nq: '%s' % str(nq['call_index'])) :
 
     df = pd.DataFrame(data=_df_data(),index=_df_index())
     return df
+
+# Return a DataFrame containing kernel enqueue info.
+def df_kernel_enqueues(nqs, unit='ms'):
+    multiplier = {
+        'ns' : { 'profiling' : 1e-0, 'timestamp' : 1e+9 },
+        'us' : { 'profiling' : 1e-3, 'timestamp' : 1e+6 },
+        'ms' : { 'profiling' : 1e-6, 'timestamp' : 1e+3 },
+        's'  : { 'profiling' : 1e-9, 'timestamp' : 1e+0 }
+    }
+
+    df_kernel_enqueues = pd.DataFrame()
+    df_kernel_enqueues_tmp = pd.DataFrame(nqs)
+
+    # Flatten work size and offset lists.
+    df_kernel_enqueues[['lws0','lws1','lws2']] = df_kernel_enqueues_tmp['lws'].apply(pd.Series)
+    df_kernel_enqueues[['gws0','gws1','gws2']] = df_kernel_enqueues_tmp['gws'].apply(pd.Series)
+    df_kernel_enqueues[['gwo0','gwo1','gwo2']] = df_kernel_enqueues_tmp['gwo'].apply(pd.Series)
+
+    # Flatten timestamp dictionaries
+    df_kernel_enqueues_tmp[['t0','t1']] = df_kernel_enqueues_tmp['timestamp'].apply(pd.Series)
+    # Compute the timestamp difference.
+    df_kernel_enqueues['t1 - t0 (%s)' % unit] = df_kernel_enqueues_tmp[['t0','t1']] \
+        .apply(lambda x: multiplier[unit]['timestamp'] * ts_delta_s(x[0],x[1]), axis=1)
+
+    # Flatten profiling dictionaries
+    # NB: Note this approach is different from the one used for timestamps
+    # due to non-intuitive order of flattening via .apply(pd.Series).
+    df_kernel_enqueues_tmp['p0'] = df_kernel_enqueues_tmp['profiling'].apply(lambda x: x['queued'])
+    df_kernel_enqueues_tmp['p1'] = df_kernel_enqueues_tmp['profiling'].apply(lambda x: x['submit'])
+    df_kernel_enqueues_tmp['p2'] = df_kernel_enqueues_tmp['profiling'].apply(lambda x: x['start'])
+    df_kernel_enqueues_tmp['p3'] = df_kernel_enqueues_tmp['profiling'].apply(lambda x: x['end'])
+    # Compute the profiling differences.
+    df_kernel_enqueues['p3 - p0 (%s)' % unit] = \
+        multiplier[unit]['profiling'] * (df_kernel_enqueues_tmp['p3'] - df_kernel_enqueues_tmp['p0'])
+    df_kernel_enqueues['p3 - p2 (%s)' % unit] = \
+        multiplier[unit]['profiling'] * (df_kernel_enqueues_tmp['p3'] - df_kernel_enqueues_tmp['p2'])
+    df_kernel_enqueues['p2 - p1 (%s)' % unit] = \
+        multiplier[unit]['profiling'] * (df_kernel_enqueues_tmp['p2'] - df_kernel_enqueues_tmp['p1'])
+    df_kernel_enqueues['p1 - p0 (%s)' % unit] = \
+        multiplier[unit]['profiling'] * (df_kernel_enqueues_tmp['p1'] - df_kernel_enqueues_tmp['p0'])
+
+    # Set the index.
+    df_kernel_enqueues[['call_index','name']] = df_kernel_enqueues_tmp[['call_index','name']]
+    df_kernel_enqueues.set_index(['call_index', 'name'], inplace=True)
+
+    return df_kernel_enqueues
+
+
+def df_kernel_enqueues_cumulative_time_num(df_kernel_enqueues_all, unit):
+    # For each kernel enqueue, create the time column and column of all ones.
+    df_time_num = df_kernel_enqueues_all[['p3 - p2 (%s)' % unit]].copy()
+    df_time_num['1'] = 1
+
+    # Compute the cumulative time and the number of enqueues.
+    df_cumulative_time_num = df_time_num.groupby(level='name').sum()
+    # Update the column labels.
+    df_cumulative_time_num.columns = ['** Execution time (%s) **' % unit, '** Number of enqueues **']
+    # Update the index label.
+    df_cumulative_time_num.index.name = '** Kernel name **'
+
+    # Compute the execution time percentage.
+    df_cumulative_time_num['** Execution time (%) **'] = 100 * ( \
+         df_cumulative_time_num['** Execution time (%s) **' % unit] / \
+         df_cumulative_time_num['** Execution time (%s) **' % unit].sum())
+
+    # Sort the columns so that the number of enqueues comes first, and sort the rows in descending order.
+    return df_cumulative_time_num[
+        ['** Number of enqueues **', '** Execution time (%s) **' % unit, '** Execution time (%) **']
+    ].sort_values('** Execution time (%) **', ascending=False)
