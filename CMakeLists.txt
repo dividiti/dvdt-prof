@@ -1,5 +1,5 @@
 #
-# 2015-2016 (c) dividiti
+# 2015-2017 (c) dividiti
 #
 
 cmake_minimum_required(VERSION 3.0)
@@ -7,7 +7,7 @@ cmake_minimum_required(VERSION 3.0)
 project(Prof)
 
 # The Prof copyright messages.
-set(Prof_COPYRIGHT_DIVIDITI "\"2015-2016 (c) dividiti\"")
+set(Prof_COPYRIGHT_DIVIDITI "\"2015-2017 (c) dividiti\"")
 
 # The Prof version.
 set(Prof_VERSION_MAJOR 0)

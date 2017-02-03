@@ -1,4 +1,4 @@
-# 2015-2016 (c) dividiti
+# 2015-2017 (c) dividiti
 
 # Add an interceptor library that intercepts some calls in 'libOpenCL.so'.
 add_library(prof_test SHARED ${SOURCE})

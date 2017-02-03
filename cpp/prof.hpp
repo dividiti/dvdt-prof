@@ -1,5 +1,5 @@
 //
-// 2015-2016 (c) dividiti
+// 2015-2017 (c) dividiti
 //
 
 #ifndef DVDT_PROF_HPP
