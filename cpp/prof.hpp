@@ -64,7 +64,7 @@ public:
             (cl_context, cl_device_id, cl_command_queue_properties, cl_int *errcode_ret);
 
         typedef cl_kernel (*clCreateKernel_type)\
-            (cl_program, const char * givenKernelName, cl_int * errcode_ret);
+            (cl_program, const char * kernel_name, cl_int * errcode_ret);
 
         typedef cl_int (*clCreateKernelsInProgram_type)\
             (cl_program, cl_uint num_kernels, cl_kernel * kernel, cl_uint * num_kernels_ret);
