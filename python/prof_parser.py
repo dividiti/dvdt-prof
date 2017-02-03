@@ -102,6 +102,27 @@ def match_clCreateKernel(output, result):
     return (output[return_match.end():], result)
 
 
+def match_clCreateKernelsInProgram(output, result):
+    call = 'clCreateKernelsInProgram'
+
+    # Arguments.
+    result['program'] = re.search('%s %s %s (?P<program>%s)' % \
+        (prefix, call, 'program', ptr_regex), output).group('program')
+    result['num_kernels'] = int(re.search('%s %s %s (?P<num_kernels>%s)' % \
+        (prefix, call, 'num_kernels', int_regex), output).group('num_kernels'))
+    result['kernels'] = re.search('%s %s %s (?P<kernels>%s)' % \
+        (prefix, call, 'kernels', ptr_regex), output).group('kernels')
+    result['num_kernels_ret'] = re.search('%s %s %s (?P<num_kernels_ret>%s)' % \
+        (prefix, call, 'num_kernels_ret', ptr_regex), output).group('num_kernels_ret')
+
+    # Return value.
+    return_match = re.search('%s %s %s (?P<errcode>%s)' % \
+        (prefix, call, 'errcode', int_regex), output)
+    result['errcode'] = int(return_match.group('errcode'))
+
+    return (output[return_match.end():], result)
+
+
 def match_clCreateProgramWithSource(output, result):
     call = 'clCreateProgramWithSource'
 
@@ -247,6 +268,7 @@ map_call_to_parser = {
     'clCreateBuffer'            : match_clCreateBuffer,
     'clCreateCommandQueue'      : match_clCreateCommandQueue,
     'clCreateKernel'            : match_clCreateKernel,
+    'clCreateKernelsInProgram'  : match_clCreateKernelsInProgram,
     'clCreateProgramWithSource' : match_clCreateProgramWithSource,
     'clEnqueueNDRangeKernel'    : match_clEnqueueNDRangeKernel,
     'clEnqueueReadBuffer'       : match_clEnqueueReadBuffer,
