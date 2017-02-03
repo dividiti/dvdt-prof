@@ -66,6 +66,9 @@ public:
         typedef cl_kernel (*clCreateKernel_type)\
             (cl_program, const char * givenKernelName, cl_int * errcode_ret);
 
+        typedef cl_int (*clCreateKernelsInProgram_type)\
+            (cl_program, cl_uint num_kernels, cl_kernel * kernel, cl_uint * num_kernels_ret);
+
         typedef cl_program (*clCreateProgramWithSource_type)\
             (cl_context, cl_uint count, const char ** strings, const size_t * lengths, cl_int * errcode_ret);
 
@@ -86,6 +89,7 @@ public:
         clCreateBuffer_type            clCreateBuffer_original;
         clCreateCommandQueue_type      clCreateCommandQueue_original;
         clCreateKernel_type            clCreateKernel_original;
+        clCreateKernelsInProgram_type  clCreateKernelsInProgram_original;
         clCreateProgramWithSource_type clCreateProgramWithSource_original;
         clEnqueueNDRangeKernel_type    clEnqueueNDRangeKernel_original;
         clEnqueueReadBuffer_type       clEnqueueReadBuffer_original;
@@ -102,6 +106,7 @@ public:
             clCreateBuffer_original(NULL),
             clCreateCommandQueue_original(NULL),
             clCreateKernel_original(NULL),
+            clCreateKernelsInProgram_original(NULL),
             clCreateProgramWithSource_original(NULL),
             clEnqueueNDRangeKernel_original(NULL),
             clEnqueueReadBuffer_original(NULL),

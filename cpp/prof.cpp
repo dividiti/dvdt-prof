@@ -22,6 +22,7 @@ static dvdt::ostreamLogger logger;
 // - clCreateBuffer()
 // - clCreateCommandQueue()
 // - clCreateKernel()
+// - clCreateKernelsInProgram()
 // - clCreateProgramWithSource()
 // - clEnqueueNDRangeKernel()
 // - clEnqueueReadBuffer()
@@ -218,6 +219,50 @@ clCreateKernel(
     return kernel;
 
 } // clCreateKernel()
+
+
+// https://www.khronos.org/registry/cl/sdk/1.2/docs/man/xhtml/clCreateKernelsInProgram.html
+extern CL_API_ENTRY cl_int CL_API_CALL
+clCreateKernelsInProgram(
+    cl_program program,
+    cl_uint num_kernels,
+    cl_kernel *kernels,
+    cl_uint *num_kernels_ret) CL_API_SUFFIX__VERSION_1_0
+{
+    // Return value.
+    cl_int errcode = CL_SUCCESS;
+
+    // API call.
+    const char * call = "clCreateKernelsInProgram";
+    logger.log_call(call);
+
+    if (NULL == prof.interceptor.clCreateKernelsInProgram_original)
+    {
+        prof.interceptor.clCreateKernelsInProgram_original = (dvdt::Prof::Interceptor::clCreateKernelsInProgram_type) dlsym(RTLD_NEXT, call);
+    }
+
+    // Arguments.
+    logger.log_ptr(call, "program", program);
+    logger.log_num<cl_uint>(call, "num_kernels", num_kernels);
+    logger.log_ptr(call, "kernels", kernels);
+    logger.log_ptr(call, "num_kernels_ret", num_kernels_ret);
+
+#ifndef DVDT_PROF_TEST
+    logger.log_timestamp_start(call);
+
+    // Original call.
+    errcode = prof.interceptor.clCreateKernelsInProgram_original(
+        program, num_kernels, kernels, num_kernels_ret);
+
+    logger.log_timestamp_end(call);
+#endif
+
+    // Return value.
+    logger.log_num<cl_int>(call, "errcode", errcode); logger.log_lf();
+
+    return errcode;
+
+} // clCreateKernelsInProgram()
 
 
 // https://www.khronos.org/registry/cl/sdk/1.2/docs/man/xhtml/clCreateProgramWithSource.html
