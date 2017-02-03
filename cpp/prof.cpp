@@ -23,6 +23,7 @@ static dvdt::ostreamLogger logger;
 // - clCreateCommandQueue()
 // - clCreateKernel()
 // - clCreateKernelsInProgram()
+// - clCreateProgramWithBinary()
 // - clCreateProgramWithSource()
 // - clEnqueueNDRangeKernel()
 // - clEnqueueReadBuffer()
@@ -263,6 +264,61 @@ clCreateKernelsInProgram(
     return errcode;
 
 } // clCreateKernelsInProgram()
+
+
+// https://www.khronos.org/registry/cl/sdk/1.2/docs/man/xhtml/clCreateProgramWithBinary.html
+extern CL_API_ENTRY cl_program CL_API_CALL
+clCreateProgramWithBinary(
+    cl_context context,
+    cl_uint num_devices,
+    const cl_device_id *device_list,
+    const size_t *lengths,
+    const unsigned char **binaries,
+    cl_int *binary_status,
+    cl_int *errcode_ret) CL_API_SUFFIX__VERSION_1_0
+{
+    // Return value.
+    cl_program program = (cl_program) 0x0;
+
+    // API call.
+    const char * call = "clCreateProgramWithBinary";
+    logger.log_call(call);
+
+    if (NULL == prof.interceptor.clCreateProgramWithBinary_original)
+    {
+        prof.interceptor.clCreateProgramWithBinary_original = (dvdt::Prof::Interceptor::clCreateProgramWithBinary_type) dlsym(RTLD_NEXT, call);
+    }
+
+    if (NULL == prof.interceptor.context)
+    {
+        prof.interceptor.context = context;
+    }
+
+    // Arguments.
+    logger.log_ptr(call, "context", context);
+    logger.log_num<cl_uint>(call, "num_devices", num_devices);
+    logger.log_ptr(call, "device_list", device_list);
+    logger.log_ptr(call, "lengths", lengths);
+    logger.log_ptr(call, "binaries", binaries);
+    logger.log_ptr(call, "binary_status", binary_status);
+    logger.log_ptr(call, "errcode_ret", errcode_ret);
+
+#ifndef DVDT_PROF_TEST
+    logger.log_timestamp_start(call);
+
+    // Original call.
+    program = prof.interceptor.clCreateProgramWithBinary_original(\
+        context, num_devices, device_list, lengths, binaries, binary_status, errcode_ret);
+
+    logger.log_timestamp_end(call);
+#endif
+
+    // Return value.
+    logger.log_ptr(call, "program", program); logger.log_lf();
+
+    return program;
+
+} // clCreateProgramWithBinary()
 
 
 // https://www.khronos.org/registry/cl/sdk/1.2/docs/man/xhtml/clCreateProgramWithSource.html
