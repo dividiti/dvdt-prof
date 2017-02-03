@@ -14,7 +14,7 @@ int main()
     cl_program program = clCreateProgramWithBinary(context,
         num_devices, device_list,
         lengths, binaries,
-        binary_status, errcode);
+        binary_status, errcode_ret);
     assert((cl_program) 0x00000000 == program);
 
     return 0;
