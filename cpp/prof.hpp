@@ -466,6 +466,7 @@ public:
             stream << prefix << " <<\n";
             stream << result << "\n";
             stream << prefix << " >>\n";
+            stream.flush();
             free(result);
         }
         // Free calls array.
