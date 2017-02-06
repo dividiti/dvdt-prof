@@ -473,12 +473,13 @@ public:
         }
         // Print calls array.
         {
-            char * result = cJSON_Print(calls);
+            char * result_ptr = cJSON_Print(calls);
+            std::string result_str(result_ptr);
             stream << prefix << " <<\n";
-            stream << result << "\n";
+            stream << result_str << "\n";
             stream << prefix << " >>\n";
             stream.flush();
-            free(result);
+            free(result_ptr);
         }
         // Free calls array.
         cJSON_Delete(calls);
