@@ -121,6 +121,9 @@ clCreateBuffer(
         context, flags, size, host_ptr, errcode_ret);
 
     logger.log_timestamp_end(call);
+
+    // Error value.
+    logger.log_num<cl_int>(call, "errcode", errcode_ret ? *errcode_ret : -1);
 #endif
 
     // Return value.
@@ -170,6 +173,9 @@ clCreateCommandQueue(
         context, device, properties | CL_QUEUE_PROFILING_ENABLE, errcode_ret);
 
     logger.log_timestamp_end(call);
+
+    // Error value.
+    logger.log_num<cl_int>(call, "errcode", errcode_ret ? *errcode_ret : -1);
 #endif
 
     // Return value.
@@ -212,6 +218,9 @@ clCreateKernel(
         program, kernel_name, errcode_ret);
 
     logger.log_timestamp_end(call);
+
+    // Error value.
+    logger.log_num<cl_int>(call, "errcode", errcode_ret ? *errcode_ret : -1);
 #endif
 
     // Return value.
@@ -311,6 +320,9 @@ clCreateProgramWithBinary(
         context, num_devices, device_list, lengths, binaries, binary_status, errcode_ret);
 
     logger.log_timestamp_end(call);
+
+    // Error value.
+    logger.log_num<cl_int>(call, "errcode", errcode_ret ? *errcode_ret : -1);
 #endif
 
     // Return value.
@@ -363,6 +375,9 @@ clCreateProgramWithSource(
         context, count, strings, lengths, errcode_ret);
 
     logger.log_timestamp_end(call);
+
+    // Error value.
+    logger.log_num<cl_int>(call, "errcode", errcode_ret ? *errcode_ret : -1);
 #endif
 
     // Return value.
