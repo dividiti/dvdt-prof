@@ -55,11 +55,12 @@ clBuildProgram(
 
     // Arguments.
     logger.log_ptr(call, "program", program);
-    // TODO: num_devices.
-    // TODO: device_list.
+    logger.log_num<cl_uint>(call, "num_devices", num_devices);
+    logger.log_ptr(call, "device_list_ptr", device_list);
+    logger.log_list<cl_device_id>(call, "device_list", device_list, num_devices);
     logger.log_str(call, "options", options ? options : "");
-    // TODO: pfn_notify.
-    // TODO: user_data.
+    logger.log_ptr(call, "pfn_notify", (const void *) pfn_notify);
+    logger.log_ptr(call, "user_data", user_data);
 
 #ifndef DVDT_PROF_TEST
     logger.log_timestamp_start(call);
@@ -67,7 +68,8 @@ clBuildProgram(
     // Original call.
     errcode = prof.interceptor.clBuildProgram_original(\
         program, num_devices, device_list, options, pfn_notify, user_data);
-    // TODO: Make the call blocking so (end - start) represents the actual program build time.
+    // TODO: When pfn_notify is not NULL, still make the call blocking so that
+    // (timestamp_end - timestamp_start) represents the actual build time.
 
     logger.log_timestamp_end(call);
 #endif
