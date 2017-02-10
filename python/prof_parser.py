@@ -117,8 +117,10 @@ def match_clCreateKernelsInProgram(output, result):
         (prefix, call, 'num_kernels', int_regex), output).group('num_kernels'))
     result['kernels'] = re.search('%s %s %s (?P<kernels>%s)' % \
         (prefix, call, 'kernels', ptr_regex), output).group('kernels')
-    result['num_kernels_ret'] = re.search('%s %s %s (?P<num_kernels_ret>%s)' % \
-        (prefix, call, 'num_kernels_ret', ptr_regex), output).group('num_kernels_ret')
+    result['num_kernels_ret_ptr'] = re.search('%s %s %s (?P<num_kernels_ret_ptr>%s)' % \
+        (prefix, call, 'num_kernels_ret_ptr', ptr_regex), output).group('num_kernels_ret_ptr')
+    result['num_kernels_ret'] = int(re.search('%s %s %s (?P<num_kernels_ret>%s)' % \
+        (prefix, call, 'num_kernels_ret', int_regex), output).group('num_kernels_ret'))
 
     # Return value.
     return_match = re.search('%s %s %s (?P<errcode>%s)' % \

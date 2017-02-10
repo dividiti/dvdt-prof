@@ -255,7 +255,8 @@ clCreateKernelsInProgram(
     logger.log_ptr(call, "program", program);
     logger.log_num<cl_uint>(call, "num_kernels", num_kernels);
     logger.log_ptr(call, "kernels", kernels);
-    logger.log_ptr(call, "num_kernels_ret", num_kernels_ret);
+    // TODO: log list of kernels.
+    logger.log_ptr(call, "num_kernels_ret_ptr", num_kernels_ret);
 
 #ifndef DVDT_PROF_TEST
     logger.log_timestamp_start(call);
@@ -265,6 +266,11 @@ clCreateKernelsInProgram(
         program, num_kernels, kernels, num_kernels_ret);
 
     logger.log_timestamp_end(call);
+
+    // Actual number of kernels in program.
+    logger.log_num<cl_uint>(call, "num_kernels_ret", num_kernels_ret ? *num_kernels_ret : -1);
+#else
+    logger.log_num<cl_uint>(call, "num_kernels_ret", 0);
 #endif
 
     // Return value.
