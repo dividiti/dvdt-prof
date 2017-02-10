@@ -170,18 +170,19 @@ def match_clCreateProgramWithSource(output, result):
 
     result['source'] = {}
     for k in range(result['count']):
-        prefix_call_string_k = '%s %s %s' %  (prefix, call, 'sources\[%d\]' % k)
-        result['source'][str(k)] = re.search('%s <<\n(?P<string>.*)\n%s >>\n' % \
-            (prefix_call_string_k, prefix_call_string_k), output, re.DOTALL).group('string')
+        prefix_call_string_k = '%s %s %s' % \
+                               (prefix, call, 'sources\[%d\]' % k)
+        # NB: '.*?' matches any characters between the markers
+        # in a non-greedy fashion.
+        result['source'][str(k)] = \
+            re.search('%s <<\n(?P<string>.*?)\n%s >>\n' % \
+            (prefix_call_string_k, prefix_call_string_k), \
+            output, re.DOTALL).group('string')
 
     # Return value.
     return_match = re.search('%s %s %s (?P<program>%s)' % \
         (prefix, call, 'program', ptr_regex), output)
     result['program'] = return_match.group('program')
-
-    # FIXME: Remove debug info.
-    with open('%s.json' % result['program'], 'w') as f:
-        json.dump(result, f, indent=2)
 
     return (output[return_match.end():], result)
 
@@ -348,7 +349,9 @@ def prof_parse_ostream(output):
 
 def prof_parse_cjson(output):
     results = []
-    match = re.search('%s <<\n(?P<json>.*)\n%s >>\n' % (prefix, prefix), output, re.DOTALL)
+    match = re.search('%s <<\n(?P<json>.*)\n%s >>\n' % \
+                     (prefix, prefix), \
+                     output, re.DOTALL)
     if match:
         results = json.loads(match.group('json'))
     return results
