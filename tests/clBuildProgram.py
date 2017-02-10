@@ -29,17 +29,14 @@ def match_init_list(text, lhs_regex, elem_regex):
 source = {}
 with open(call + _id + '.cpp', 'r') as f:
     source['text'] = f.read()
-    source['program'] = re.search('\(cl_program\) (?P<program>%s)' %
-                                  ptr_regex, source['text']).group('program')
-
-    num_events = int(re.search('num_devices(\s*)=(\s*)(?P<num_devices>\d+)', source['text']).group('num_devices'))
-    cl_device_ptr_list = match_init_list(source['text'], 'device_list\[%d\]' % num_events, '\(cl_device_id\) %s' % ptr_regex)
-    source['device_list'] = [re.match('\(cl_device_id\) (?P<ptr>%s)' % ptr_regex, cl_device_ptr).group('ptr') for cl_device_ptr in cl_device_ptr_list]
-
+    source['program'] = re.search('\(cl_program\) (?P<program>%s)' % ptr_regex, source['text']).group('program')
     source['options'] = re.search('options(\s*)=(\s*)\"(?P<options>%s)\"' % opts_regex, source['text']).group('options')
-
     source['pfn_notify'] = re.search('\(pfn_notify_t \*\) (?P<pfn_notify>%s)' % ptr_regex, source['text']).group('pfn_notify')
     source['user_data'] = re.search('\(void \*\) (?P<user_data>%s)' % ptr_regex, source['text']).group('user_data')
+    # Parse device list.
+    num_devices = int(re.search('num_devices(\s*)=(\s*)(?P<num_devices>\d+)', source['text']).group('num_devices'))
+    cl_device_ptr_list = match_init_list(source['text'], 'device_list\[%d\]' % num_devices, '\(cl_device_id\) %s' % ptr_regex)
+    source['device_list'] = [re.match('\(cl_device_id\) (?P<ptr>%s)' % ptr_regex, cl_device_ptr).group('ptr') for cl_device_ptr in cl_device_ptr_list]
 
 # Read from stdin (via pipe).
 output = sys.stdin.read()
