@@ -5,7 +5,7 @@ int main()
 {
     cl_context context = (cl_context) 0x01234567;
     cl_uint count = 1;
-    const char * strings[1] = { "void kernel() {}" };
+    const char * strings[1] = { "kernel void f() {}" };
     const size_t * lengths = (const size_t *) 0x00000000;
     cl_int * errcode = (cl_int *) 0x12345678;
 
