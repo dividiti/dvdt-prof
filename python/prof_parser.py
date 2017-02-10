@@ -27,9 +27,14 @@ def match_clBuildProgram(output, result):
     # Arguments.
     result['program'] = re.search('%s %s %s (?P<program>%s)' % \
         (prefix, call, 'program', ptr_regex), output).group('program')
+    result['device_list'] = re.search('%s %s %s(?P<device_list>( %s)*)' % \
+        (prefix, call, 'device_list', ptr_regex), output).group('device_list').split()
     result['options'] = re.search('%s %s %s (?P<options>%s)' % \
         (prefix, call, 'options', opts_regex), output).group('options')
-    # TODO: device_list, pfn_notify, user_data
+    result['pfn_notify']  = re.search('%s %s %s (?P<pfn_notify>%s)' % \
+        (prefix, call, 'pfn_notify', ptr_regex), output).group('pfn_notify')
+    result['user_data']  = re.search('%s %s %s (?P<user_data>%s)' % \
+        (prefix, call, 'user_data', ptr_regex), output).group('user_data')
 
     # Return value.
     return_match = re.search('%s %s %s (?P<errcode>%s)' % \
@@ -129,10 +134,8 @@ def match_clCreateProgramWithBinary(output, result):
     # Arguments.
     result['context'] = re.search('%s %s %s (?P<context>%s)' % \
         (prefix, call, 'context', ptr_regex), output).group('context')
-    result['num_devices'] = int(re.search('%s %s %s (?P<num_devices>%s)' % \
-        (prefix, call, 'num_devices', int_regex), output).group('num_devices'))
-    result['device_list'] = re.search('%s %s %s (?P<device_list>%s)' % \
-        (prefix, call, 'device_list', ptr_regex), output).group('device_list')
+    result['device_list'] = re.search('%s %s %s(?P<device_list>( %s)*)' % \
+        (prefix, call, 'device_list', ptr_regex), output).group('device_list').split()
     result['lengths'] = re.search('%s %s %s (?P<lengths>%s)' % \
         (prefix, call, 'lengths', ptr_regex), output).group('lengths')
     result['binaries'] = re.search('%s %s %s (?P<binaries>%s)' % \
@@ -167,7 +170,7 @@ def match_clCreateProgramWithSource(output, result):
 
     result['source'] = {}
     for k in range(result['count']):
-        prefix_call_string_k = '%s %s %s' %  (prefix, call, 'strings\[%d\]' % k)
+        prefix_call_string_k = '%s %s %s' %  (prefix, call, 'sources\[%d\]' % k)
         result['source'][str(k)] = re.search('%s <<\n(?P<string>.*)\n%s >>\n' % \
             (prefix_call_string_k, prefix_call_string_k), output, re.DOTALL).group('string')
 
@@ -175,6 +178,10 @@ def match_clCreateProgramWithSource(output, result):
     return_match = re.search('%s %s %s (?P<program>%s)' % \
         (prefix, call, 'program', ptr_regex), output)
     result['program'] = return_match.group('program')
+
+    # FIXME: Remove debug info.
+    with open('%s.json' % result['program'], 'w') as f:
+        json.dump(result, f, indent=2)
 
     return (output[return_match.end():], result)
 

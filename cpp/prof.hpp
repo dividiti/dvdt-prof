@@ -388,7 +388,7 @@ public:
     {
         for (cl_uint c = 0; c < count; ++c)
         {
-            stream << prefix << sep << call_name << sep << "strings[" << c << "] <<" << lf;
+            stream << prefix << sep << call_name << sep << "sources[" << c << "] <<" << lf;
             if (NULL == lengths || 0 == lengths[c])
             {
                 // Program string is null-terminated.
@@ -404,7 +404,7 @@ public:
                 }
             }
             stream << std::endl;
-            stream << prefix << sep << call_name << sep << "strings[" << c << "] >>" << lf;
+            stream << prefix << sep << call_name << sep << "sources[" << c << "] >>" << lf;
         }
     } // log_src()
 
