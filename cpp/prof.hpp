@@ -548,8 +548,8 @@ public:
         for (cl_uint i = 0; i < list_size; ++i)
         {
             elem_ty list_i = list[i];
-            // FIXME: Currently only used for lists of cl_event's,
-            // which can be represented as pointers.
+            // FIXME: Currently only used for lists of cl_event's
+            // and cl_device_id's, which are effectively pointers.
             cJSON_AddItemToArray(list_as_array,
                 cJSON_CreateString(ptr_to_str(list_i).c_str()));
         }
