@@ -55,8 +55,6 @@ clBuildProgram(
 
     // Arguments.
     logger.log_ptr(call, "program", program);
-    logger.log_num<cl_uint>(call, "num_devices", num_devices);
-    logger.log_ptr(call, "device_list_ptr", device_list);
     logger.log_list<cl_device_id>(call, "device_list", device_list, num_devices);
     logger.log_str(call, "options", options ? options : "");
     logger.log_ptr(call, "pfn_notify", (const void *) pfn_notify);
@@ -307,8 +305,7 @@ clCreateProgramWithBinary(
 
     // Arguments.
     logger.log_ptr(call, "context", context);
-    logger.log_num<cl_uint>(call, "num_devices", num_devices);
-    logger.log_ptr(call, "device_list", device_list);
+    logger.log_list<cl_device_id>(call, "device_list", device_list, num_devices);
     logger.log_ptr(call, "lengths", lengths);
     logger.log_ptr(call, "binaries", binaries);
     logger.log_ptr(call, "binary_status", binary_status);
