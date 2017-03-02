@@ -15,6 +15,7 @@ opts_regex = '([ \-\w_=]*)'
 iso_regex  = '(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6})'
 ptr_regex  = '((0x[0-9a-fA-F]{1,8})|(0))'
 int_regex  = '(\d+)'
+hex_regex  = '([a-fA-F\d]+)'
 bool_regex = '(\d)'
 
 #
@@ -288,8 +289,16 @@ def match_clSetKernelArg(output, result):
         (prefix, call, 'arg_index', int_regex), output).group('arg_index'))
     result['arg_size'] = int(re.search('%s %s %s (?P<arg_size>%s)' % \
         (prefix, call, 'arg_size',  int_regex), output).group('arg_size'))
-    result['arg_value'] = re.search('%s %s %s (?P<arg_value>%s)' % \
-        (prefix, call, 'arg_value', ptr_regex), output).group('arg_value')
+    arg_value = re.search('%s %s %s (?P<arg_value>%s)' % \
+        (prefix, call, 'arg_value', hex_regex), output).group('arg_value')
+    result['arg_value'] = arg_value
+
+    result['arg_value_as_str'] = arg_value.decode('hex')
+
+    arg_value_reversed = ''.join(reversed(
+        [ arg_value[n:n+2] for n in range(0,len(arg_value),2) ]
+    ))
+    result['arg_value_as_int'] = int(arg_value_reversed, 16)
 
     # Return value.
     return_match = re.search('%s %s %s (?P<errcode>%s)' % \

@@ -195,6 +195,9 @@ public:
         virtual inline void
         log_gwo(const char * call_name, cl_uint work_dim, const size_t * global_work_offset) = 0;
 
+        virtual inline void
+        log_hex(const char * call_name, const char * arg_name, const void * arg_value_ptr, size_t arg_size) = 0;
+
         // NB: Templated function cannot be virtual.
         template <typename elem_ty> inline void
         log_list(const char * call_name, const char * list_name, const elem_ty * list, cl_uint list_size) { };
@@ -351,6 +354,18 @@ public:
     {
         stream << prefix << sep << call_name << sep << arg_name << sep << arg_value << lf;
     } // log_num()
+
+    inline void
+    log_hex(const char * call_name, const char * arg_name, const void * arg_value_ptr, size_t arg_size)
+    {
+        stream << prefix << sep << call_name << sep << arg_name << sep << std::hex;
+        for (size_t i = 0; i < arg_size; ++i)
+        {
+            unsigned int byte = (unsigned int) reinterpret_cast<const char*>(arg_value_ptr)[i];
+            stream << std::setfill('0') << std::setw(2) << byte;
+        }
+        stream << std::dec << lf;
+    } // log_hex()
 
     inline void
     log_profiling_info(const char * call_name, cl_event * prof_event)
@@ -540,6 +555,12 @@ public:
         }
         cJSON_AddItemToObject(call, "gwo", gwo);
     } // log_gwo()
+
+    inline void
+    log_hex(const char * call_name, const char * arg_name, const void * arg_value_ptr, size_t arg_size)
+    {
+        // TODO
+    } // log_hex()
 
     template <typename elem_ty> inline void
     log_list(const char * call_name, const char * list_name, const elem_ty * list, cl_uint list_size)

@@ -20,8 +20,8 @@ with open(call + _id + '.cpp', 'r') as f:
     source['text'] = f.read()
     source['kernel'] = re.search('\(cl_kernel\) (?P<kernel>%s)' % ptr_regex, source['text']).group('kernel')
     source['arg_index'] = int(re.search('arg_index(\s*)=(\s*)(?P<arg_index>\d+)', source['text']).group('arg_index'))
+    source['arg_value_as_int'] = int(re.search('arg_value(\s*)=(\s*)(?P<arg_value>\d+)', source['text']).group('arg_value'))
     source['arg_size'] = int(re.search('arg_size(\s*)=(\s*)(?P<arg_size>\d+)', source['text']).group('arg_size'))
-    source['arg_value'] = re.search('\(const void \*\) (?P<arg_value>%s)' % ptr_regex, source['text']).group('arg_value')
 
 # Read from stdin (via pipe).
 output = sys.stdin.read()
@@ -37,7 +37,7 @@ status = True
 status &= (source['kernel'] == result['kernel'])
 status &= (source['arg_index'] == result['arg_index'])
 status &= (source['arg_size'] == result['arg_size'])
-status &= (source['arg_value'] == result['arg_value'])
+status &= (source['arg_value_as_int'] == result['arg_value_as_int'])
 status &= (0 == result['errcode'])
 
 print '%s%s: %s' % (call, _id, 'PASSED' if status else 'FAILED')

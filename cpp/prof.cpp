@@ -606,7 +606,7 @@ clSetKernelArg(
     cl_kernel kernel,
     cl_uint arg_index,
     size_t arg_size,
-    const void *arg_value) CL_API_SUFFIX__VERSION_1_0
+    const void *arg_value_ptr) CL_API_SUFFIX__VERSION_1_0
 {
     // Return value.
     cl_int errcode = CL_SUCCESS;
@@ -624,13 +624,14 @@ clSetKernelArg(
     logger.log_ptr(call, "kernel", kernel);
     logger.log_num<cl_uint>(call, "arg_index", arg_index);
     logger.log_num<size_t>(call, "arg_size", arg_size);
-    logger.log_ptr(call, "arg_value", arg_value);
+    logger.log_ptr(call, "arg_value_ptr", arg_value_ptr);
+    logger.log_hex(call, "arg_value", arg_value_ptr, arg_size);
 
 #ifndef DVDT_PROF_TEST
     logger.log_timestamp_start(call);
 
     // Original call.
-    errcode = prof.interceptor.clSetKernelArg_original(kernel, arg_index, arg_size, arg_value);
+    errcode = prof.interceptor.clSetKernelArg_original(kernel, arg_index, arg_size, arg_value_ptr);
 
     logger.log_timestamp_end(call);
 #endif
