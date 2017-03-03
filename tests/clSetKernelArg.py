@@ -30,12 +30,11 @@ print 'OUTPUT'
 print output
 
 result = prof_parse(output)[0]
+result['arg_value_as_int'] = hex_str_as_int(result['arg_value'])
 print 'RESULT'
 print result
 print
 
-if result.get('arg_value_as_int', -1)==-1:
-    result['arg_value_as_int'] = hex_str_as_int(result['arg_value'])
 
 status = True
 status &= (source['kernel'] == result['kernel'])

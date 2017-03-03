@@ -563,7 +563,7 @@ public:
         ss << std::hex;
         for (size_t i = 0; i < arg_size; ++i)
         {
-            unsigned int byte = (unsigned int) reinterpret_cast<const char*>(arg_value_ptr)[i];
+            int byte = static_cast<int>(reinterpret_cast<const char*>(arg_value_ptr)[i] & 0xff);
             ss << std::setfill('0') << std::setw(2) << byte;
         }
         const std::string arg_value_str = ss.str();
