@@ -289,16 +289,8 @@ def match_clSetKernelArg(output, result):
         (prefix, call, 'arg_index', int_regex), output).group('arg_index'))
     result['arg_size'] = int(re.search('%s %s %s (?P<arg_size>%s)' % \
         (prefix, call, 'arg_size',  int_regex), output).group('arg_size'))
-    arg_value = re.search('%s %s %s (?P<arg_value>%s)' % \
+    result['arg_value'] = re.search('%s %s %s (?P<arg_value>%s)' % \
         (prefix, call, 'arg_value', hex_regex), output).group('arg_value')
-    result['arg_value'] = arg_value
-
-    result['arg_value_as_str'] = arg_value.decode('hex')
-
-    arg_value_reversed = ''.join(reversed(
-        [ arg_value[n:n+2] for n in range(0,len(arg_value),2) ]
-    ))
-    result['arg_value_as_int'] = int(arg_value_reversed, 16)
 
     # Return value.
     return_match = re.search('%s %s %s (?P<errcode>%s)' % \

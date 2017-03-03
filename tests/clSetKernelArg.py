@@ -8,6 +8,7 @@ sys.path.append('../python')
 from prof_parser import prof_parse
 from prof_parser import ptr_regex
 from prof_parser import opts_regex
+from prof_common import hex_str_as_int
 
 # Test info.
 call = 'clSetKernelArg'
@@ -32,6 +33,9 @@ result = prof_parse(output)[0]
 print 'RESULT'
 print result
 print
+
+if result.get('arg_value_as_int', -1)==-1:
+    result['arg_value_as_int'] = hex_str_as_int(result['arg_value'])
 
 status = True
 status &= (source['kernel'] == result['kernel'])

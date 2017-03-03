@@ -2,13 +2,13 @@
 # 2015-2017 (c) dividiti
 #
 
-import re
-import json
+import prof_common
 
 import dateutil.parser
 
 import pandas as pd
 
+# Check that definitions from this file are available.
 def test():
     print ("prof_wrangler.py")
 
