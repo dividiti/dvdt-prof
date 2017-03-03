@@ -566,8 +566,9 @@ public:
             unsigned int byte = (unsigned int) reinterpret_cast<const char*>(arg_value_ptr)[i];
             ss << std::setfill('0') << std::setw(2) << byte;
         }
-        const char * arg_value = ss.str().c_str();
-        cJSON * arg_value_as_str = cJSON_CreateString(arg_value);
+        const std::string arg_value_str = ss.str();
+        const char * arg_value_cstr = arg_value_str.c_str();
+        cJSON * arg_value_as_str = cJSON_CreateString(arg_value_cstr);
         cJSON_AddItemToObject(call, arg_name, arg_value_as_str);
     } // log_hex()
 
