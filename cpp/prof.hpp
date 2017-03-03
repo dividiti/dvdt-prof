@@ -361,7 +361,7 @@ public:
         stream << prefix << sep << call_name << sep << arg_name << sep << std::hex;
         for (size_t i = 0; i < arg_size; ++i)
         {
-            unsigned int byte = (unsigned int) reinterpret_cast<const char*>(arg_value_ptr)[i];
+            int byte = static_cast<int>(reinterpret_cast<const char*>(arg_value_ptr)[i] & 0xff);
             stream << std::setfill('0') << std::setw(2) << byte;
         }
         stream << std::dec << lf;
