@@ -559,7 +559,16 @@ public:
     inline void
     log_hex(const char * call_name, const char * arg_name, const void * arg_value_ptr, size_t arg_size)
     {
-        // TODO
+        std::stringstream ss;
+        ss << std::hex;
+        for (size_t i = 0; i < arg_size; ++i)
+        {
+            unsigned int byte = (unsigned int) reinterpret_cast<const char*>(arg_value_ptr)[i];
+            ss << std::setfill('0') << std::setw(2) << byte;
+        }
+        const char * arg_value = ss.str().c_str();
+        cJSON * arg_value_as_str = cJSON_CreateString(arg_value);
+        cJSON_AddItemToObject(call, arg_name, arg_value_as_str);
     } // log_hex()
 
     template <typename elem_ty> inline void

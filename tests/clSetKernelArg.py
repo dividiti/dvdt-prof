@@ -33,6 +33,13 @@ print 'RESULT'
 print result
 print
 
+if result.get('arg_value_as_int', -1)==-1:
+    arg_value = result['arg_value']
+    arg_value_reversed = ''.join(reversed(
+        [ arg_value[n:n+2] for n in range(0,len(arg_value),2) ]
+    ))
+    result['arg_value_as_int'] = int(arg_value_reversed, 16)
+
 status = True
 status &= (source['kernel'] == result['kernel'])
 status &= (source['arg_index'] == result['arg_index'])
