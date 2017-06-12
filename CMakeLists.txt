@@ -19,6 +19,8 @@ set(WALLCLOCK "boost" CACHE STRING "How to measure wall-clock time.")
 if(WALLCLOCK STREQUAL "boost")
   message(STATUS "Measuring wall-clock time using boost::chrono")
   add_definitions(-D DVDT_PROF_WALLCLOCK_BOOST=1)
+  include_directories("${BOOST_INCLUDE_DIR}")
+  SET(BOOST_LIB_PATH "${BOOST_LIB_DIR}/libboost_date_time.a")
 elseif(WALLCLOCK STREQUAL "timeofday")
   message(STATUS "Measuring wall-clock time using gettimeofday()")
   add_definitions(-D DVDT_PROF_WALLCLOCK_TIMEOFDAY=1)
@@ -62,7 +64,7 @@ set(SOURCE
 
 # Add an interceptor library that intercepts some calls in 'libOpenCL.so'.
 add_library(prof SHARED ${SOURCE})
-target_link_libraries(prof dl "${CJSON_LIB_PATH}")
+target_link_libraries(prof dl "${CJSON_LIB_PATH}" "${BOOST_LIB_PATH}")
 
 # Test descriptions are in a separate file.
 include(CTest)
