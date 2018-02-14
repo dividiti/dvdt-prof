@@ -33,7 +33,7 @@ import dvdt_function as tools
 ###  Options todo: --call=NDRange specify opencl operations. NDRange by default
 #### Table options... Maybe we want raw data or cvs 
 
-parser = argparse.ArgumentParser(description='DVDT PROF CLI')
+parser = argparse.ArgumentParser(description='Dividiti Profiler Command Line Interface v0')
 #parser.add_argument("--filter_by", action="store", dest="bool_aggregate", help="Show information of unique kernel name")
 parser.add_argument("--aggregate", action="store_true",  dest="aggregate_bool", default=None, help="Show information by of unique kernel names")
 parser.add_argument("--verbose", action="store",  dest="verbose_lvl", default=0, help="verbose level")

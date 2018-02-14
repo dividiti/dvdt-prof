@@ -127,28 +127,38 @@ def print_table(k_lst, app_lst, limit=0, by_kernel=[], view="simple"):
      partial_percent = 0.0
      partial_time = 0.0
      value  = []
+     idd = 0
      if len(by_kernel) == 0:
          for i in k_lst:
+             idd +=1
              if i["percent"] > limit:
                  total_calls = total_calls + 1
                  gws = i['configuration']['gws']
                  lws = i['configuration']['lws']
-                 value.append( [i["kernel_id"], i["kernel_name"], format(i['total_time'],'.2f'), format(i['percent'],'.2f'), gws, lws ])
+                 #value.append( [i["kernel_id"], i["kernel_name"], format(i['total_time'],'.2f'), format(i['percent'],'.2f'), gws, lws ])
+                 value.append( [idd, i["kernel_name"], format(i['total_time'],'.2f'), format(i['percent'],'.2f'), gws, lws ])
+
                  partial_time    += i['total_time']
                  partial_percent += i["percent"]
 
-     else: 
+     else:
          for i in k_lst:
+             idd +=1 
              if i["percent"] > limit and i["kernel_name"] in by_kernel:
                  total_calls = total_calls + 1
                  gws = i['configuration']['gws']
                  lws = i['configuration']['lws']
-                 value.append( [i["kernel_id"], i["kernel_name"], format(i['total_time'],'.2f'), format(i['percent'],'.2f'), gws, lws ])
+                 #value.append( [i["kernel_id"], i["kernel_name"], format(i['total_time'],'.2f'), format(i['percent'],'.2f'), gws, lws ])
+                 value.append( [str(idd), i["kernel_name"], format(i['total_time'],'.2f'), format(i['percent'],'.2f'), gws, lws ])
+
                  partial_time    += i['total_time']
                  partial_percent += i["percent"]
      ## APP INFO
+     by_kernel_str = ''
+     for k in by_kernel:
+         by_kernel_str += str(k)+'\n'
      app_header = ["Filter_by", "Threshold % > ", "Calls", "Partial time", "Partial percent" ]
-     app_value = [[by_kernel, limit, total_calls, partial_time, partial_percent ]]
+     app_value = [[by_kernel_str, limit, total_calls, format(partial_time,'.2f'), format(partial_percent,'.2f') ]]
      #value.append([total_calls,"-", format(partial_time,'.2f') , format(partial_percent,'.2f')])
      print "\n"
      print tabulate(value, header, tablefmt=view)        
