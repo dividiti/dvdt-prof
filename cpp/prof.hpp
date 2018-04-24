@@ -79,6 +79,9 @@ public:
         typedef cl_int (*clEnqueueNDRangeKernel_type)\
             (cl_command_queue, cl_kernel, cl_uint, const size_t *, const size_t *, const size_t *, cl_uint, const cl_event *, cl_event *);
 
+        typedef void * (*clEnqueueMapBuffer_type)\
+            (cl_command_queue, cl_mem, cl_bool, cl_map_flags, size_t, size_t, cl_uint, const cl_event *, cl_event *, cl_int *);
+
         typedef cl_int (*clEnqueueReadBuffer_type)\
             (cl_command_queue, cl_mem, cl_bool, size_t, size_t, void *, cl_uint, const cl_event *, cl_event *);
 
@@ -97,6 +100,7 @@ public:
         clCreateProgramWithBinary_type clCreateProgramWithBinary_original;
         clCreateProgramWithSource_type clCreateProgramWithSource_original;
         clEnqueueNDRangeKernel_type    clEnqueueNDRangeKernel_original;
+        clEnqueueMapBuffer_type        clEnqueueMapBuffer_original;
         clEnqueueReadBuffer_type       clEnqueueReadBuffer_original;
         clEnqueueWriteBuffer_type      clEnqueueWriteBuffer_original;
         clSetKernelArg_type            clSetKernelArg_original;
@@ -115,6 +119,7 @@ public:
             clCreateProgramWithBinary_original(NULL),
             clCreateProgramWithSource_original(NULL),
             clEnqueueNDRangeKernel_original(NULL),
+            clEnqueueMapBuffer_original(NULL),
             clEnqueueReadBuffer_original(NULL),
             clEnqueueWriteBuffer_original(NULL),
             clSetKernelArg_original(NULL),

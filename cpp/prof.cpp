@@ -1,5 +1,5 @@
 //
-// 2015-2017 (c) dividiti
+// 2015-2018 (c) dividiti
 //
 
 
@@ -26,6 +26,7 @@ static dvdt::ostreamLogger logger;
 // - clCreateProgramWithBinary()
 // - clCreateProgramWithSource()
 // - clEnqueueNDRangeKernel()
+// - clEnqueueMapBuffer()
 // - clEnqueueReadBuffer()
 // - clEnqueueWriteBuffer()
 // - clSetKernelArg()
@@ -471,6 +472,74 @@ clEnqueueNDRangeKernel(
     return errcode;
 
 } // clEnqueueNDRangeKernel()
+
+
+// https://www.khronos.org/registry/OpenCL/sdk/1.2/docs/man/xhtml/clEnqueueMapBuffer.html
+extern CL_API_ENTRY void * CL_API_CALL
+clEnqueueMapBuffer(
+    cl_command_queue queue,
+    cl_mem buffer,
+    cl_bool blocking,
+    cl_map_flags flags,
+    size_t offset,
+    size_t size,
+    cl_uint num_events_in_wait_list,
+    const cl_event *event_wait_list,
+    cl_event *event,
+    cl_int *errcode_ret) CL_API_SUFFIX__VERSION_1_0
+{
+    // Return value.
+    void * ptr = NULL;
+
+    // API call.
+    const char * call = "clEnqueueMapBuffer";
+    logger.log_call(call);
+
+    if (NULL == prof.interceptor.clEnqueueMapBuffer_original)
+    {
+        prof.interceptor.clEnqueueMapBuffer_original = (dvdt::Prof::Interceptor::clEnqueueMapBuffer_type) dlsym(RTLD_NEXT, call);
+    }
+
+    // Arguments.
+    logger.log_ptr(call, "queue", queue);
+    logger.log_ptr(call, "buffer", buffer);
+    logger.log_num<cl_bool>(call, "blocking", blocking);
+    logger.log_num<cl_map_flags>(call, "flags", flags);
+    logger.log_num<size_t>(call, "offset", offset);
+    logger.log_num<size_t>(call, "size", size);
+    // - event_wait_list
+    logger.log_list<cl_event>(call, "event_wait_list", event_wait_list, num_events_in_wait_list);
+    // - event
+    logger.log_ptr(call, "event", event);
+
+#ifndef DVDT_PROF_TEST
+    logger.log_timestamp_start(call);
+
+    // Event object needed if 'event' is NULL.
+    cl_event prof_event_obj;
+    cl_event * prof_event = (NULL != event ? event : &prof_event_obj);
+
+    // Original call.
+    ptr = prof.interceptor.clEnqueueMapBuffer_original(queue, buffer, blocking, flags, offset, size,
+        num_events_in_wait_list, event_wait_list, prof_event, errcode_ret);
+
+    // Wait for original call to complete.
+    logger.log_profiling_info(call, prof_event);
+
+    logger.log_timestamp_end(call);
+
+    // Error value.
+    logger.log_num<cl_int>(call, "errcode", errcode_ret ? *errcode_ret : -1);
+#else
+    logger.log_profiling_info(call, NULL);
+#endif
+
+    // Return value.
+    logger.log_ptr(call, "ptr", ptr); logger.log_lf();
+
+    return ptr;
+
+} // clEnqueueMapBuffer()
 
 
 // https://www.khronos.org/registry/cl/sdk/1.2/docs/man/xhtml/clEnqueueReadBuffer.html
