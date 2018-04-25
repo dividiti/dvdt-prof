@@ -27,6 +27,7 @@ static dvdt::ostreamLogger logger;
 // - clCreateProgramWithSource()
 // - clEnqueueNDRangeKernel()
 // - clEnqueueMapBuffer()
+// - clEnqueueUnmapMemObject()
 // - clEnqueueReadBuffer()
 // - clEnqueueWriteBuffer()
 // - clSetKernelArg()
@@ -540,6 +541,66 @@ clEnqueueMapBuffer(
     return ptr;
 
 } // clEnqueueMapBuffer()
+
+
+// https://www.khronos.org/registry/OpenCL/sdk/1.2/docs/man/xhtml/clEnqueueUnmapMemObject.html
+extern CL_API_ENTRY cl_int CL_API_CALL
+clEnqueueUnmapMemObject(
+    cl_command_queue queue,
+    cl_mem memobj,
+    void  *mapped_ptr,
+    cl_uint num_events_in_wait_list,
+    const cl_event *event_wait_list,
+    cl_event *event
+    ) CL_API_SUFFIX__VERSION_1_0
+{
+    // Return value.
+    cl_int errcode = CL_SUCCESS;
+
+    // API call.
+    const char * call = "clEnqueueUnmapMemObject";
+    logger.log_call(call);
+
+    if (NULL == prof.interceptor.clEnqueueUnmapMemObject_original)
+    {
+        prof.interceptor.clEnqueueUnmapMemObject_original = (dvdt::Prof::Interceptor::clEnqueueUnmapMemObject_type) dlsym(RTLD_NEXT, call);
+    }
+
+    // Arguments.
+    logger.log_ptr(call, "queue", queue);
+    logger.log_ptr(call, "memobj", memobj);
+    logger.log_ptr(call, "mapped_ptr", mapped_ptr); 
+    // - event_wait_list
+    logger.log_list<cl_event>(call, "event_wait_list", event_wait_list, num_events_in_wait_list);
+    // - event
+    logger.log_ptr(call, "event", event);
+
+#ifndef DVDT_PROF_TEST
+    logger.log_timestamp_start(call);
+
+    // Event object needed if 'event' is NULL.
+    cl_event prof_event_obj;
+    cl_event * prof_event = (NULL != event ? event : &prof_event_obj);
+
+    // Original call.
+    errcode = prof.interceptor.clEnqueueUnmapMemObject_original(queue, memobj, mapped_ptr, num_events_in_wait_list, event_wait_list, prof_event);
+
+    // Wait for original call to complete.
+    logger.log_profiling_info(call, prof_event);
+
+    logger.log_timestamp_end(call);
+
+    #else
+    logger.log_profiling_info(call, NULL);
+#endif
+
+    // Return value.
+    logger.log_num<cl_int>(call, "errcode", errcode); logger.log_lf();
+
+    return errcode;
+
+} // clEnqueueUnmapMemObject()
+
 
 
 // https://www.khronos.org/registry/cl/sdk/1.2/docs/man/xhtml/clEnqueueReadBuffer.html
